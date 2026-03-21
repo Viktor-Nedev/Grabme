@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { CalendarDays, MapPin, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Event } from '@/types';
@@ -10,7 +11,11 @@ interface EventCardProps {
 
 export function EventCard({ event, organizerName }: EventCardProps) {
   return (
-    <article className="surface-card flex h-full flex-col p-5">
+    <motion.article
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.2 }}
+      className="surface-card flex h-full flex-col p-5 transition"
+    >
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-red">{event.foodType}</p>
       <h3 className="mt-2 font-display text-xl">{event.title}</h3>
       <p className="mt-3 line-clamp-3 text-sm text-brand-gray">{event.description}</p>
@@ -39,6 +44,6 @@ export function EventCard({ event, organizerName }: EventCardProps) {
           </Link>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

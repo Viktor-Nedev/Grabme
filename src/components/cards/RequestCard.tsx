@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Clock3, MapPin, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { FoodRequest } from '@/types';
@@ -10,7 +11,11 @@ interface RequestCardProps {
 
 export function RequestCard({ request, requesterName }: RequestCardProps) {
   return (
-    <article className="surface-card flex h-full flex-col p-5">
+    <motion.article
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.2 }}
+      className="surface-card flex h-full flex-col p-5 transition"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${urgencyTone(request.urgency)}`}>
@@ -45,6 +50,6 @@ export function RequestCard({ request, requesterName }: RequestCardProps) {
           </Link>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

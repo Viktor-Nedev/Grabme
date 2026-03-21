@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -11,7 +12,7 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, change, icon, tone = 'default' }: StatsCardProps) {
   return (
-    <div className="surface-card p-5">
+    <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }} className="surface-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-brand-gray">{label}</p>
@@ -30,6 +31,6 @@ export function StatsCard({ label, value, change, icon, tone = 'default' }: Stat
         </div>
       </div>
       {change ? <p className="mt-4 text-sm font-medium text-brand-gray">{change}</p> : null}
-    </div>
+    </motion.div>
   );
 }

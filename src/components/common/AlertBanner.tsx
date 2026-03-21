@@ -1,5 +1,6 @@
 import { AlertTriangle, Bell, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { cn } from '@/utils/cn';
 
 interface AlertBannerProps {
@@ -21,7 +22,10 @@ export function AlertBanner({
     tone === 'critical' ? <AlertTriangle className="size-5" /> : tone === 'warning' ? <Bell className="size-5" /> : <Sparkles className="size-5" />;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className={cn(
         'rounded-[26px] border p-4 md:p-5',
         tone === 'critical' && 'border-red-200 bg-red-50 text-red-800',
@@ -43,6 +47,6 @@ export function AlertBanner({
           </Link>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }

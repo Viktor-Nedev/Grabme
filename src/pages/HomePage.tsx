@@ -13,14 +13,21 @@ import { QUICK_STATS, ROUTES } from '@/utils/constants';
 export function HomePage() {
   const { donations, requests, events, organizations } = useAppData();
   const protectedNavigate = useProtectedNavigation();
+  const reveal = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0 },
+  };
 
   return (
     <div className="pb-20">
-      <section className="section-shell grid gap-10 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-          <span className="inline-flex rounded-full bg-brand-yellow/30 px-4 py-2 text-sm font-semibold text-brand-ink">
-            Hackathon-ready food rescue and food access platform
-          </span>
+      <motion.section
+        className="section-shell grid gap-10 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20"
+        initial="hidden"
+        animate="show"
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
+        <motion.div variants={reveal}>
           <h1 className="mt-6 max-w-3xl font-display text-5xl leading-tight md:text-6xl">
             Redirect surplus food into neighborhoods that need it most.
           </h1>
@@ -28,7 +35,7 @@ export function HomePage() {
             Grabme connects NGOs, food banks, stores, and donors with people who need food right now. Live donations,
             urgent requests, and community pickup events stay visible on one public map.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <motion.div className="mt-8 flex flex-wrap gap-3" variants={reveal} transition={{ delay: 0.1 }}>
             <Link to={ROUTES.map} className="btn-primary">
               <MapPinned className="size-4" />
               Find Food Near You
@@ -45,23 +52,25 @@ export function HomePage() {
             <Link to={ROUTES.events} className="btn-ghost">
               Explore Events
             </Link>
-          </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          </motion.div>
+          <motion.div className="mt-10 grid gap-4 sm:grid-cols-3" variants={reveal} transition={{ delay: 0.2 }}>
             {QUICK_STATS.map((stat) => (
               <div key={stat.label} className="surface-muted p-4">
                 <p className="font-display text-2xl">{stat.value}</p>
                 <p className="mt-2 text-sm text-brand-gray">{stat.label}</p>
               </div>
             ))}
-          </div>
+          </motion.div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="surface-card overflow-hidden p-6"
+          className="surface-card relative overflow-hidden p-6"
         >
+          <div className="absolute -right-16 -top-12 size-40 rounded-full bg-brand-yellow/30 blur-3xl" />
+          <div className="absolute -bottom-12 -left-12 size-32 rounded-full bg-brand-red/20 blur-3xl" />
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-[28px] bg-brand-red p-6 text-white">
               <p className="text-sm uppercase tracking-[0.22em] text-white/70">Mission</p>
@@ -92,15 +101,53 @@ export function HomePage() {
             </div>
           </div>
         </motion.div>
-      </section>
+      </motion.section>
 
-      <section className="section-shell py-8">
+      <motion.section
+        className="section-shell pb-6"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.35 }}
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
+        <div className="surface-card grid gap-8 p-8 lg:grid-cols-[0.45fr_0.55fr] lg:items-center">
+          <motion.div className="flex flex-col gap-4" variants={reveal}>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand-red">Brand Characters</p>
+            <h3 className="font-display text-3xl">Warmth, dignity, and community-first design.</h3>
+            <p className="text-sm text-brand-gray">
+              The visual system is friendly and human. Characters reinforce trust and approachability for people who need
+              help fast.
+            </p>
+          </motion.div>
+          <motion.div className="relative" variants={reveal}>
+            <motion.img
+              src="/character_grabme.png"
+              alt="Grabme community character"
+              className="w-full rounded-[28px] bg-white/60 p-4 shadow-[var(--shadow-soft)] float-medium rotate-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.03 }}
+            />
+          </motion.div>
+        </div>
+      </motion.section>
+
+      <motion.section
+        className="section-shell py-8"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
         <SectionHeading
           eyebrow="How It Works"
           title="A simple loop from available food to fulfilled need"
           description="Designed for fast scanning, fast posting, and clear action during a live demo."
         />
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <motion.div className="mt-8 grid gap-4 md:grid-cols-3" variants={reveal}>
           {[
             {
               icon: <UtensilsCrossed className="size-6" />,
@@ -124,35 +171,79 @@ export function HomePage() {
               <p className="mt-3 text-sm text-brand-gray">{item.description}</p>
             </div>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
-      <section className="section-shell py-8">
+      <motion.section
+        className="section-shell py-8"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
         <SectionHeading
           eyebrow="Impact Preview"
           title="The startup-style overview judges expect to see"
           description="Live impact metrics, community signals, and mission progress are visible from the first screen."
         />
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <motion.div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4" variants={reveal}>
           <StatsCard label="Available donations" value={String(donations.length)} change="Live and map-visible now" />
           <StatsCard label="Active requests" value={String(requests.length)} change="Including urgent and critical needs" tone="critical" />
           <StatsCard label="Upcoming events" value={String(events.length)} change="Distribution and community pickups" tone="warning" />
           <StatsCard label="Partner organizations" value={String(organizations.length)} change="Food banks, NGOs, stores, and rescue teams" tone="success" />
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
-      <section className="section-shell py-8">
+      <motion.section
+        className="section-shell py-8"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
+        <div className="surface-card grid gap-8 p-8 lg:grid-cols-[0.45fr_0.55fr] lg:items-center">
+          <motion.div className="relative" variants={reveal}>
+            <motion.img
+              src="/secondcharacter_grabme.png"
+              alt="Grabme volunteer character"
+              className="w-full rounded-[28px] bg-white/60 p-4 shadow-[var(--shadow-soft)] float-slow -rotate-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              whileHover={{ scale: 1.03 }}
+            />
+          </motion.div>
+          <motion.div className="flex flex-col gap-4" variants={reveal}>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand-red">Community Faces</p>
+            <h3 className="font-display text-3xl">Visible help, visible hope.</h3>
+            <p className="text-sm text-brand-gray">
+              Designed to feel approachable for people seeking food support and for organizations coordinating relief.
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      <motion.section
+        className="section-shell py-8"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={reveal}
+        transition={{ duration: 0.45 }}
+      >
         <SectionHeading
           eyebrow="Live Preview"
           title="Real data views already wired together"
           description="The feed cards below are pulled from the same state layer that powers details pages, dashboards, and the map."
         />
-        <div className="mt-8 grid gap-6 xl:grid-cols-3">
+        <motion.div className="mt-8 grid gap-6 xl:grid-cols-3" variants={reveal}>
           <DonationCard donation={donations[0]} organizationName="Hope Harvest Network" />
           <RequestCard request={requests[0]} requesterName="Maya Johnson" />
           <EventCard event={events[0]} organizerName="Hope Harvest Network" />
-        </div>
-        <div className="mt-8 flex flex-wrap gap-3">
+        </motion.div>
+        <motion.div className="mt-8 flex flex-wrap gap-3" variants={reveal}>
           <Link to={ROUTES.map} className="btn-primary">
             Open Public Map
             <ArrowRight className="size-4" />
@@ -160,8 +251,8 @@ export function HomePage() {
           <Link to={ROUTES.auth} className="btn-ghost">
             Enter Demo Workspace
           </Link>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
     </div>
   );
 }

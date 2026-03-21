@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Menu, Sparkles, X } from 'lucide-react';
+import { Menu, Settings, UserRound, X } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { RoleBadge } from '@/components/common/RoleBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/utils/constants';
 import { cn } from '@/utils/cn';
@@ -15,7 +14,7 @@ const publicLinks = [
 
 export function Navbar() {
   const navigate = useNavigate();
-  const { currentProfile, currentOrganization, isAuthenticated, loginAsDemo, logout } = useAuth();
+  const { currentProfile, isAuthenticated, loginAsDemo } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const dashboardRoute =
@@ -31,12 +30,8 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-white/60 bg-white/80 backdrop-blur-xl">
       <div className="section-shell flex items-center justify-between gap-4 py-4">
         <Link to={ROUTES.home} className="flex items-center gap-3">
-          <div className="rounded-2xl bg-brand-red p-2.5 text-white shadow-[var(--shadow-soft)]">
-            <Sparkles className="size-5" />
-          </div>
-          <div>
-            <p className="font-display text-lg">Grabme</p>
-            <p className="text-xs text-brand-gray">Food rescue for real neighborhoods</p>
+          <div className="rounded-2xl bg-white/80 p-2 shadow-[var(--shadow-soft)]">
+            <img src="/logo_grabme.png" alt="Grabme logo" className="h-12 w-12 object-contain" />
           </div>
         </Link>
 
@@ -62,22 +57,27 @@ export function Navbar() {
               AI Insights
             </NavLink>
           ) : null}
+          {isAuthenticated ? (
+            <NavLink
+              to={dashboardRoute}
+              className={({ isActive }) =>
+                cn('text-sm font-medium text-brand-gray transition hover:text-brand-ink', isActive && 'text-brand-ink')
+              }
+            >
+              Dashboard
+            </NavLink>
+          ) : null}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated && currentProfile ? (
             <>
-              <RoleBadge
-                role={currentProfile.role}
-                verified={Boolean(currentOrganization?.verified)}
-                className="bg-brand-ink/6"
-              />
-              <Link to={dashboardRoute} className="btn-ghost px-4 py-2 text-sm">
-                Dashboard
+              <Link to={ROUTES.profile} className="rounded-full border border-brand-ink/10 bg-white/70 p-2 text-brand-gray transition hover:-translate-y-0.5 hover:text-brand-ink">
+                <UserRound className="size-4" />
               </Link>
-              <button type="button" onClick={logout} className="btn-primary px-4 py-2 text-sm">
-                Log out
-              </button>
+              <Link to={ROUTES.settings} className="rounded-full border border-brand-ink/10 bg-white/70 p-2 text-brand-gray transition hover:-translate-y-0.5 hover:text-brand-ink">
+                <Settings className="size-4" />
+              </Link>
             </>
           ) : (
             <>
@@ -108,7 +108,7 @@ export function Navbar() {
         </button>
       </div>
 
-      {mobileOpen ? (
+        {mobileOpen ? (
         <div className="section-shell border-t border-brand-ink/8 py-4 md:hidden">
           <div className="flex flex-col gap-4">
             {publicLinks.map((link) => (

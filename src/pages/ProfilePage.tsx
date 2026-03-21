@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export function ProfilePage() {
   const { requests } = useAppData();
-  const { currentProfile, currentOrganization } = useAuth();
+  const { currentProfile, currentOrganization, logout } = useAuth();
 
   if (!currentProfile) {
     return null;
@@ -54,6 +54,11 @@ export function ProfilePage() {
               <p className="mt-2 font-semibold">{myRequests.length} requests posted</p>
             </div>
           )}
+        </div>
+        <div className="mt-8 flex">
+          <button type="button" onClick={logout} className="btn-primary">
+            Log out
+          </button>
         </div>
       </div>
     </div>

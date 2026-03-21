@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { CalendarClock, MapPin, PackageOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Donation } from '@/types';
@@ -10,7 +11,11 @@ interface DonationCardProps {
 
 export function DonationCard({ donation, organizationName }: DonationCardProps) {
   return (
-    <article className="surface-card flex h-full flex-col p-5">
+    <motion.article
+      whileHover={{ y: -6 }}
+      transition={{ duration: 0.2 }}
+      className="surface-card flex h-full flex-col p-5 transition"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-red">{donation.category}</p>
@@ -46,6 +51,6 @@ export function DonationCard({ donation, organizationName }: DonationCardProps) 
           </Link>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
