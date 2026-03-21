@@ -1,0 +1,151 @@
+import { useState } from 'react';
+import { Menu, Sparkles, X } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { RoleBadge } from '@/components/common/RoleBadge';
+import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/utils/constants';
+import { cn } from '@/utils/cn';
+
+const publicLinks = [
+  { label: 'Map', to: ROUTES.map },
+  { label: 'Donations', to: ROUTES.donationFeed },
+  { label: 'Requests', to: ROUTES.requests },
+  { label: 'Events', to: ROUTES.events },
+];
+
+export function Navbar() {
+  const navigate = useNavigate();
+  const { currentProfile, currentOrganization, isAuthenticated, loginAsDemo, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const dashboardRoute =
+    currentProfile?.role === 'organization' ? ROUTES.orgDashboard : ROUTES.userDashboard;
+
+  const handleDemoLogin = (role: 'user' | 'organization') => {
+    const result = loginAsDemo(role);
+    navigate(result.redirectTo);
+    setMobileOpen(false);
+  };
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-white/60 bg-white/80 backdrop-blur-xl">
+      <div className="section-shell flex items-center justify-between gap-4 py-4">
+        <Link to={ROUTES.home} className="flex items-center gap-3">
+          <div className="rounded-2xl bg-brand-red p-2.5 text-white shadow-[var(--shadow-soft)]">
+            <Sparkles className="size-5" />
+          </div>
+          <div>
+            <p className="font-display text-lg">Grabme</p>
+            <p className="text-xs text-brand-gray">Food rescue for real neighborhoods</p>
+          </div>
+        </Link>
+
+        <nav className="hidden items-center gap-6 md:flex">
+          {publicLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                cn('text-sm font-medium text-brand-gray transition hover:text-brand-ink', isActive && 'text-brand-ink')
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+          {currentProfile?.role === 'organization' ? (
+            <NavLink
+              to={ROUTES.aiInsights}
+              className={({ isActive }) =>
+                cn('text-sm font-medium text-brand-gray transition hover:text-brand-ink', isActive && 'text-brand-ink')
+              }
+            >
+              AI Insights
+            </NavLink>
+          ) : null}
+        </nav>
+
+        <div className="hidden items-center gap-3 md:flex">
+          {isAuthenticated && currentProfile ? (
+            <>
+              <RoleBadge
+                role={currentProfile.role}
+                verified={Boolean(currentOrganization?.verified)}
+                className="bg-brand-ink/6"
+              />
+              <Link to={dashboardRoute} className="btn-ghost px-4 py-2 text-sm">
+                Dashboard
+              </Link>
+              <button type="button" onClick={logout} className="btn-primary px-4 py-2 text-sm">
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => handleDemoLogin('user')} className="btn-ghost px-4 py-2 text-sm">
+                Demo User
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('organization')}
+                className="btn-secondary px-4 py-2 text-sm"
+              >
+                Demo Org
+              </button>
+              <Link to={ROUTES.auth} className="btn-primary px-4 py-2 text-sm">
+                Login
+              </Link>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="rounded-2xl border border-brand-ink/10 p-2 md:hidden"
+          onClick={() => setMobileOpen((value) => !value)}
+          aria-label="Toggle navigation"
+        >
+          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+      </div>
+
+      {mobileOpen ? (
+        <div className="section-shell border-t border-brand-ink/8 py-4 md:hidden">
+          <div className="flex flex-col gap-4">
+            {publicLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileOpen(false)}
+                className="text-sm font-medium text-brand-gray"
+              >
+                {link.label}
+              </NavLink>
+            ))}
+            {isAuthenticated && currentProfile ? (
+              <>
+                <Link to={dashboardRoute} onClick={() => setMobileOpen(false)} className="btn-ghost text-sm">
+                  Dashboard
+                </Link>
+                <button type="button" onClick={logout} className="btn-primary text-sm">
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => handleDemoLogin('user')} className="btn-ghost text-sm">
+                  Demo User
+                </button>
+                <button type="button" onClick={() => handleDemoLogin('organization')} className="btn-secondary text-sm">
+                  Demo Org
+                </button>
+                <Link to={ROUTES.auth} onClick={() => setMobileOpen(false)} className="btn-primary text-sm">
+                  Login
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </header>
+  );
+}

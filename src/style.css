@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", sans-serif;
+  --font-display: "Sora", sans-serif;
+
+  --color-brand-red: #E53935;
+  --color-brand-yellow: #FFC107;
+  --color-brand-yellow-hover: #FFB300;
+  --color-brand-cream: #FFF8E1;
+  --color-brand-ink: #212121;
+  --color-brand-gray: #757575;
+  --color-brand-surface: #FFFDF7;
+  --color-brand-muted: #FFF4CC;
+  --color-brand-sand: #FDE8D2;
+  --color-brand-success: #2E7D32;
+
+  --shadow-soft: 0 30px 70px -30px rgba(229, 57, 53, 0.25);
+  --shadow-card: 0 25px 60px -28px rgba(33, 33, 33, 0.22);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-brand-cream font-sans text-brand-ink antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(255, 193, 7, 0.2), transparent 28%),
+      radial-gradient(circle at top right, rgba(229, 57, 53, 0.12), transparent 30%),
+      linear-gradient(180deg, #fffdf7 0%, #fff8e1 45%, #fffdf7 100%);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  * {
+    @apply border-brand-ink/10;
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-[28px] border border-white/70 bg-white/90 shadow-[var(--shadow-card)] backdrop-blur-xl;
+  }
+
+  .surface-muted {
+    @apply rounded-[24px] border border-brand-ink/5 bg-brand-surface/90;
+  }
+
+  .section-shell {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-red px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-brand-red/90;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-brand-yellow/70 bg-brand-yellow px-5 py-3 font-semibold text-brand-ink transition hover:-translate-y-0.5 hover:bg-brand-yellow-hover;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-brand-ink/10 bg-white/70 px-5 py-3 font-semibold text-brand-ink transition hover:-translate-y-0.5 hover:bg-white;
+  }
+}
