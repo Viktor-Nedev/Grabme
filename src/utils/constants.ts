@@ -49,15 +49,20 @@ export const USER_ROLES: Array<{ value: UserRole; label: string; description: st
 ];
 
 export const DEFAULT_MAP_BOUNDS = {
-  minLat: 41.74,
-  maxLat: 41.99,
-  minLng: -87.78,
-  maxLng: -87.54,
+  minLat: -60,
+  maxLat: 75,
+  minLng: -180,
+  maxLng: 180,
 };
 
 export const DEFAULT_COORDS = {
-  lat: 41.8781,
-  lng: -87.6298,
+  lat: 50.0,
+  lng: 10.0,
+};
+
+export const EUROPE_COORDS = {
+  lat: 50.0,
+  lng: 10.0,
 };
 
 export const QUICK_STATS = [

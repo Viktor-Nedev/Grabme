@@ -44,10 +44,10 @@ export function OnboardingPage() {
       address: String(form.get('address')),
       organizationType: String(form.get('organizationType')),
       operatingHours: String(form.get('operatingHours')),
-      capacity: Number(form.get('capacity')),
+      capacity: currentOrganization?.capacity ?? 120,
       foodTypes: selectedFoodTypes,
-      lat: Number(form.get('lat')),
-      lng: Number(form.get('lng')),
+      lat: currentProfile.lat,
+      lng: currentProfile.lng,
     });
     await refreshSession();
     setSubmitting(false);
@@ -113,21 +113,6 @@ export function OnboardingPage() {
                 className={inputClassName}
                 required
               />
-            </FormField>
-            <FormField label="Capacity">
-              <input
-                name="capacity"
-                type="number"
-                defaultValue={currentOrganization?.capacity ?? 120}
-                className={inputClassName}
-                required
-              />
-            </FormField>
-            <FormField label="Latitude">
-              <input name="lat" type="number" step="0.0001" defaultValue={currentProfile.lat} className={inputClassName} required />
-            </FormField>
-            <FormField label="Longitude">
-              <input name="lng" type="number" step="0.0001" defaultValue={currentProfile.lng} className={inputClassName} required />
             </FormField>
             <div className="md:col-span-2">
               <p className="text-sm font-semibold">Food types handled</p>

@@ -109,23 +109,6 @@ export function buildMapMarkers(data: AppDataset, currentProfile?: Profile | nul
 
   const markers = [...donationMarkers, ...requestMarkers, ...organizationMarkers, ...eventMarkers];
 
-  if (currentProfile) {
-    markers.push({
-      id: `marker-user-location-${currentProfile.id}`,
-      entityId: currentProfile.id,
-      type: 'user-location',
-      title: 'Your current area',
-      description: 'Saved location for nearby matches and event recommendations.',
-      locationText: currentProfile.locationText,
-      color: 'blue',
-      detailRoute: '/profile',
-      navigationLabel: currentProfile.name,
-      meta: 'Saved location',
-      lat: currentProfile.lat,
-      lng: currentProfile.lng,
-    });
-  }
-
   return markers;
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { MessageSquareMore, Navigation, PackagePlus } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageSquareMore, Navigation, PackagePlus, Trash2 } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { inputClassName } from '@/components/forms/FormField';
@@ -13,9 +13,11 @@ import { formatDateTime, urgencyTone } from '@/utils/formatters';
 export function RequestDetailsPage() {
   const { id } = useParams();
   const protectedNavigate = useProtectedNavigation();
-  const { requests, profiles, comments, addComment } = useAppData();
+  const { requests, profiles, comments, addComment, deleteRequest } = useAppData();
   const { currentProfile } = useAuth();
   const [comment, setComment] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
   const request = requests.find((entry) => entry.id === id);
   const requester = profiles.find((entry) => entry.id === request?.profileId);
   const requestComments = comments.filter((entry) => entry.requestId === id);
@@ -130,9 +132,31 @@ export function RequestDetailsPage() {
                 Offer Food
               </button>
               {isOwner ? (
-                <Link to={`/requests/${request.id}/edit`} className="btn-ghost">
-                  Edit
-                </Link>
+                <>
+                  <Link to={`/requests/${request.id}/edit`} className="btn-ghost">
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    className="btn-ghost text-red-600 hover:text-red-700"
+                    disabled={deleting}
+                    onClick={async () => {
+                      if (!window.confirm('Delete this request? This cannot be undone.')) {
+                        return;
+                      }
+                      setDeleting(true);
+                      try {
+                        await deleteRequest(request.id);
+                        navigate('/requests');
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </>
               ) : null}
             </div>
           </div>

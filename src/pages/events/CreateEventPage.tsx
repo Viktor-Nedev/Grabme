@@ -5,7 +5,7 @@ import { MapPicker } from '@/components/map/MapPicker';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { DEFAULT_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
+import { EUROPE_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
 
 export function CreateEventPage() {
   const navigate = useNavigate();
@@ -14,8 +14,8 @@ export function CreateEventPage() {
   const [submitting, setSubmitting] = useState(false);
   const [useMapPick, setUseMapPick] = useState(true);
   const [coords, setCoords] = useState({
-    lat: currentOrganization?.lat ?? DEFAULT_COORDS.lat,
-    lng: currentOrganization?.lng ?? DEFAULT_COORDS.lng,
+    lat: currentOrganization?.lat ?? EUROPE_COORDS.lat,
+    lng: currentOrganization?.lng ?? EUROPE_COORDS.lng,
   });
 
   if (!currentOrganization) {

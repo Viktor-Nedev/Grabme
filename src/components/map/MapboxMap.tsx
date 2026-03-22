@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import mapboxgl, { type Map as MapboxMapInstance, type Marker as MapboxMarker } from 'mapbox-gl';
 import type { MapMarker } from '@/types';
 import { cn } from '@/utils/cn';
+import { DEFAULT_COORDS } from '@/utils/constants';
 
 interface MapboxMapProps {
   markers: MapMarker[];
@@ -9,6 +10,7 @@ interface MapboxMapProps {
   onSelect?: (marker: MapMarker) => void;
   className?: string;
   styleUrl?: string;
+  focus?: { lat: number; lng: number; zoom?: number; key?: number };
 }
 
 function markerColor(color: MapMarker['color']) {
@@ -26,7 +28,7 @@ function markerColor(color: MapMarker['color']) {
   }
 }
 
-export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl }: MapboxMapProps) {
+export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, focus }: MapboxMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMapInstance | null>(null);
   const markerRefs = useRef<Map<string, MapboxMarker>>(new Map());
@@ -36,7 +38,7 @@ export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl }
     if (!token || !containerRef.current || mapRef.current) return;
 
     mapboxgl.accessToken = token as string;
-    const initial = markers[0] ?? { lat: 41.8781, lng: -87.6298 };
+    const initial = focus ?? markers[0] ?? DEFAULT_COORDS;
     mapRef.current = new mapboxgl.Map({
       container: containerRef.current,
       style: styleUrl ?? 'mapbox://styles/mapbox/light-v11',
@@ -45,7 +47,8 @@ export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl }
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-  }, [markers]);
+    mapRef.current.once('load', () => mapRef.current?.resize());
+  }, [markers, focus, styleUrl]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -89,6 +92,16 @@ export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl }
 
     map.flyTo({ center: [marker.lng, marker.lat], zoom: 12.5, speed: 0.8 });
   }, [markers, selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focus) return;
+    map.flyTo({
+      center: [focus.lng, focus.lat],
+      zoom: focus.zoom ?? 12.5,
+      speed: 0.9,
+    });
+  }, [focus?.key, focus?.lat, focus?.lng, focus?.zoom]);
 
   return (
     <div

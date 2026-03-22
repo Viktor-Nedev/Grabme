@@ -7,7 +7,9 @@ export function Footer() {
     <footer className="border-t border-white/60 bg-white/70 backdrop-blur-xl">
       <div className="section-shell grid gap-8 py-12 lg:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="font-display text-2xl">Grabme</p>
+          <div className="rounded-3xl p-3">
+            <img src="/image.png" alt="Grabme logo" className="h-12 w-auto object-contain" />
+          </div>
           <p className="mt-3 max-w-xl text-sm text-brand-gray">
             Built for food rescue, hunger response, and neighborhood-scale coordination. Grabme makes live donations,
             urgent requests, and community distribution visible in one place.

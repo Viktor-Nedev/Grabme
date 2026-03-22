@@ -38,6 +38,7 @@ interface AppDataContextValue extends AppDataset {
     requestId: string,
     input: NewRequestInput & { imageFile?: File | null },
   ) => Promise<FoodRequest>;
+  deleteRequest: (requestId: string) => Promise<void>;
   addEvent: (organizationId: string, input: NewEventInput & { imageFile?: File | null }) => Promise<Event>;
   addComment: (profileId: string, input: NewCommentInput) => Promise<RequestComment>;
 }
@@ -421,6 +422,23 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return request;
   };
 
+  const deleteRequest: AppDataContextValue['deleteRequest'] = async (requestId) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { error: deleteError } = await supabase.from('requests').delete().eq('id', requestId);
+    if (deleteError) {
+      throw deleteError;
+    }
+    setData((current) => {
+      const remainingRequests = current.requests.filter((entry) => entry.id !== requestId);
+      return {
+        ...current,
+        requests: remainingRequests,
+        comments: current.comments.filter((entry) => entry.requestId !== requestId),
+        aiInsights: buildInsights(current.donations, remainingRequests),
+      };
+    });
+  };
+
   const addEvent: AppDataContextValue['addEvent'] = async (organizationId, input) => {
     if (!supabase) throw new Error('Supabase not configured');
     const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'events') : null;
@@ -493,6 +511,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         updateDonation,
         addRequest,
         updateRequest,
+        deleteRequest,
         addEvent,
         addComment,
       }}

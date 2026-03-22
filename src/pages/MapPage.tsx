@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock3, MapPinned, Sparkles } from 'lucide-react';
+import { Clock3, LocateFixed, MapPinned, Sparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertBanner } from '@/components/common/AlertBanner';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -38,6 +38,7 @@ export function MapPage() {
   );
   const [locationPromptDismissed, setLocationPromptDismissed] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [focusTarget, setFocusTarget] = useState<{ lat: number; lng: number; key: number } | null>(null);
 
   const markers = buildMapMarkers({ profiles, organizations, donations, requests, events, comments: [], aiInsights }, currentProfile);
   const liveLocationMarker: MapMarker | null = userCoords
@@ -121,8 +122,11 @@ export function MapPage() {
     setLocationStatus('requesting');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+        const nextCoords = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setUserCoords(nextCoords);
         setLocationStatus('granted');
+        setLocationPromptDismissed(true);
+        setFocusTarget({ ...nextCoords, key: Date.now() });
       },
       () => {
         setLocationStatus('denied');
@@ -294,7 +298,22 @@ export function MapPage() {
                 onSelect={(marker: MapMarker) => setSelectedId(marker.id)}
                 className="h-[720px]"
                 styleUrl={styleUrl}
+                focus={focusTarget ?? (userCoords ? { lat: userCoords.lat, lng: userCoords.lng, key: 1 } : undefined)}
               />
+              <button
+                type="button"
+                className="absolute bottom-5 right-5 rounded-full border border-brand-ink/10 bg-white/90 p-3 text-brand-ink shadow-lg transition hover:-translate-y-0.5"
+                onClick={() => {
+                  if (userCoords) {
+                    setFocusTarget({ ...userCoords, key: Date.now() });
+                  } else {
+                    requestLocation();
+                  }
+                }}
+                aria-label="Center on my location"
+              >
+                <LocateFixed className="size-4 text-brand-red" />
+              </button>
               {activeMarker ? <MarkerPopup marker={activeMarker} onClose={() => setSelectedId(null)} /> : null}
             </div>
           ) : (

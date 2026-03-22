@@ -5,7 +5,7 @@ import { MapPicker } from '@/components/map/MapPicker';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { DEFAULT_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
+import { EUROPE_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
 
 export function CreateRequestPage() {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ export function CreateRequestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [useMapPick, setUseMapPick] = useState(false);
   const [coords, setCoords] = useState({
-    lat: currentProfile?.lat ?? DEFAULT_COORDS.lat,
-    lng: currentProfile?.lng ?? DEFAULT_COORDS.lng,
+    lat: currentProfile?.lat ?? EUROPE_COORDS.lat,
+    lng: currentProfile?.lng ?? EUROPE_COORDS.lng,
   });
 
   if (!currentProfile) {
@@ -36,12 +36,12 @@ export function CreateRequestPage() {
       foodType: form.get('foodType') as (typeof FOOD_CATEGORIES)[number],
       locationText: String(form.get('locationText')),
       lat: shareLocation
-        ? currentProfile.lat ?? DEFAULT_COORDS.lat
+        ? currentProfile.lat ?? EUROPE_COORDS.lat
         : useMapPick
           ? coords.lat
           : Number(form.get('lat')),
       lng: shareLocation
-        ? currentProfile.lng ?? DEFAULT_COORDS.lng
+        ? currentProfile.lng ?? EUROPE_COORDS.lng
         : useMapPick
           ? coords.lng
           : Number(form.get('lng')),

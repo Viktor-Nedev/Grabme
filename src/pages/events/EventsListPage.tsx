@@ -1,13 +1,17 @@
 import { useDeferredValue, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { SearchBar } from '@/components/common/SearchBar';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { EventCard } from '@/components/cards/EventCard';
 import { useAppData } from '@/hooks/useAppData';
+import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/utils/constants';
 
 export function EventsListPage() {
   const { events, organizations } = useAppData();
+  const { currentProfile } = useAuth();
   const [query, setQuery] = useState('');
   const [organizer, setOrganizer] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
@@ -37,6 +41,13 @@ export function EventsListPage() {
         eyebrow="Community Events"
         title="Upcoming food distribution and support events"
         description="Explore pop-up distributions, pantry nights, school pickups, and local food rescue activations."
+        action={
+          currentProfile?.role === 'organization' ? (
+            <Link to={ROUTES.eventNew} className="btn-primary">
+              Create Event
+            </Link>
+          ) : null
+        }
       />
       <div className="mt-8 grid gap-4 xl:grid-cols-[0.34fr_0.66fr]">
         <FilterBar title="Event filters">

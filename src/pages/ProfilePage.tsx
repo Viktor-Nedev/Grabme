@@ -62,10 +62,6 @@ export function ProfilePage() {
             <p className="text-sm text-brand-gray">Phone</p>
             <p className="mt-2 font-semibold">{currentProfile.phone ?? 'Not provided'}</p>
           </div>
-          <div className="surface-muted p-4">
-            <p className="text-sm text-brand-gray">Saved location</p>
-            <p className="mt-2 font-semibold">{currentProfile.locationText}</p>
-          </div>
           {currentProfile.role === 'organization' && currentOrganization ? (
             <>
               <div className="surface-muted p-4">
