@@ -14,6 +14,7 @@ import { CreateDonationPage } from '@/pages/donations/CreateDonationPage';
 import { EventDetailsPage } from '@/pages/events/EventDetailsPage';
 import { EventsListPage } from '@/pages/events/EventsListPage';
 import { CreateEventPage } from '@/pages/events/CreateEventPage';
+import { EditEventPage } from '@/pages/events/EditEventPage';
 import { HomePage } from '@/pages/HomePage';
 import { MapPage } from '@/pages/MapPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
@@ -72,6 +73,7 @@ export function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route element={<RoleProtectedRoute allowedRoles={['organization']} />}>
               <Route path="/events/new" element={<CreateEventPage />} />
+              <Route path="/events/:id/edit" element={<EditEventPage />} />
             </Route>
           </Route>
 

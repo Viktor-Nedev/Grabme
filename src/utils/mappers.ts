@@ -39,6 +39,7 @@ export function mapOrganization(row: any): Organization {
     capacity: row.capacity ?? 0,
     foodTypes: row.food_types ?? [],
     verified: Boolean(row.verified),
+    showOnMap: row.show_on_map ?? true,
     createdAt: row.created_at,
     lat: row.lat ?? DEFAULT_COORDS.lat,
     lng: row.lng ?? DEFAULT_COORDS.lng,
@@ -102,6 +103,7 @@ export function mapEvent(row: any): Event {
     notes: row.notes ?? '',
     status: row.status,
     createdAt: row.created_at,
+    imageUrl: row.image_url ?? undefined,
   };
 }
 

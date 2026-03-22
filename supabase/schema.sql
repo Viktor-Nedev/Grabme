@@ -27,6 +27,7 @@ create table if not exists public.organizations (
   capacity integer not null default 0,
   food_types text[] not null default '{}',
   verified boolean not null default false,
+  show_on_map boolean not null default true,
   lat double precision,
   lng double precision,
   created_at timestamptz not null default now()

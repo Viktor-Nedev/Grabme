@@ -12,12 +12,15 @@ interface MapboxMapProps {
   className?: string;
   styleUrl?: string;
   focus?: { lat: number; lng: number; zoom?: number; key?: number };
+  onError?: (message?: string) => void;
 }
 
-export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, focus }: MapboxMapProps) {
+export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, focus, onError }: MapboxMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMapInstance | null>(null);
   const markerRefs = useRef<Map<string, MapboxMarker>>(new Map());
+  const hasLoadedRef = useRef(false);
+  const errorReportedRef = useRef(false);
 
   useEffect(() => {
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -33,7 +36,17 @@ export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, 
     });
 
     mapRef.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-    mapRef.current.once('load', () => mapRef.current?.resize());
+    mapRef.current.once('load', () => {
+      hasLoadedRef.current = true;
+      mapRef.current?.resize();
+    });
+    mapRef.current.on('error', (event) => {
+      if (hasLoadedRef.current || errorReportedRef.current) {
+        return;
+      }
+      errorReportedRef.current = true;
+      onError?.(event.error?.message);
+    });
   }, [markers, focus, styleUrl]);
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
   UserPlus,
   UsersRound,
 } from 'lucide-react';
+import { Avatar } from '@/components/common/Avatar';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { inputClassName } from '@/components/forms/FormField';
 import { useAppData } from '@/hooks/useAppData';
@@ -123,6 +124,20 @@ export function ChatPage() {
     return conversation.title ?? 'Group chat';
   };
 
+  const resolveDirectProfile = (conversationId: string) => {
+    if (!currentProfile) return null;
+    const members = conversationMembers.filter((member) => member.conversationId === conversationId);
+    const otherId = members.find((member) => member.profileId !== currentProfile.id)?.profileId;
+    return profiles.find((profile) => profile.id === otherId) ?? null;
+  };
+
+  const resolveGroupAvatars = (conversationId: string) => {
+    const members = conversationMembers.filter((member) => member.conversationId === conversationId).slice(0, 3);
+    return members
+      .map((member) => profiles.find((profile) => profile.id === member.profileId))
+      .filter(Boolean) as Array<{ id: string; name: string; avatarUrl?: string | null }>;
+  };
+
   const resolveMemberCount = (conversationId: string) =>
     conversationMembers.filter((member) => member.conversationId === conversationId).length;
 
@@ -158,8 +173,22 @@ export function ChatPage() {
                 }`}
                 onClick={() => openConversation(conversation.id)}
               >
-                <p className="text-sm font-semibold">{resolveConversationTitle(conversation.id)}</p>
-                <p className="mt-1 text-xs text-brand-gray">Private conversation</p>
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const directProfile = resolveDirectProfile(conversation.id);
+                    return (
+                      <Avatar
+                        name={directProfile?.name ?? 'Direct chat'}
+                        src={directProfile?.avatarUrl ?? null}
+                        className="size-8"
+                      />
+                    );
+                  })()}
+                  <div>
+                    <p className="text-sm font-semibold">{resolveConversationTitle(conversation.id)}</p>
+                    <p className="mt-1 text-xs text-brand-gray">Private conversation</p>
+                  </div>
+                </div>
               </button>
             ))}
             {!directConversations.length ? (
@@ -182,10 +211,24 @@ export function ChatPage() {
                 }`}
                 onClick={() => openConversation(conversation.id)}
               >
-                <p className="text-sm font-semibold">{resolveConversationTitle(conversation.id)}</p>
-                <p className="mt-1 text-xs text-brand-gray">
-                  {resolveMemberCount(conversation.id)} members
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {resolveGroupAvatars(conversation.id).map((member) => (
+                      <Avatar
+                        key={member.id}
+                        name={member.name}
+                        src={member.avatarUrl ?? null}
+                        className="size-7 border border-white"
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{resolveConversationTitle(conversation.id)}</p>
+                    <p className="mt-1 text-xs text-brand-gray">
+                      {resolveMemberCount(conversation.id)} members
+                    </p>
+                  </div>
+                </div>
               </button>
             ))}
             {!groupConversations.length ? (
@@ -218,19 +261,23 @@ export function ChatPage() {
                   const isMine = message.profileId === currentProfile.id;
                   const sender = profiles.find((profile) => profile.id === message.profileId);
                   return (
-                    <div
-                      key={message.id}
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                        isMine
-                          ? 'ml-auto bg-brand-red text-white'
-                          : 'bg-brand-cream/70 text-brand-ink'
-                      }`}
-                    >
-                      <p className="text-xs font-semibold opacity-80">
-                        {isMine ? 'You' : sender?.name ?? 'Member'}
-                      </p>
-                      <p className="mt-1 text-sm">{message.content}</p>
-                      <p className="mt-2 text-[11px] opacity-70">{formatDateTime(message.createdAt)}</p>
+                    <div key={message.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      {!isMine ? (
+                        <Avatar name={sender?.name ?? 'Member'} src={sender?.avatarUrl ?? null} className="size-7" />
+                      ) : null}
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                          isMine
+                            ? 'bg-brand-red text-white'
+                            : 'bg-brand-cream/70 text-brand-ink'
+                        }`}
+                      >
+                        <p className="text-xs font-semibold opacity-80">
+                          {isMine ? 'You' : sender?.name ?? 'Member'}
+                        </p>
+                        <p className="mt-1 text-sm">{message.content}</p>
+                        <p className="mt-2 text-[11px] opacity-70">{formatDateTime(message.createdAt)}</p>
+                      </div>
                     </div>
                   );
                 })}
@@ -303,11 +350,14 @@ export function ChatPage() {
                       member.profileId !== currentProfile.id;
                     return (
                       <div key={member.id} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
-                        <div>
-                          <p className="text-sm font-semibold">{profile?.name ?? 'Member'}</p>
-                          <p className="text-xs text-brand-gray">
-                            {member.role === 'admin' ? 'Admin' : 'Member'}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <Avatar name={profile?.name ?? 'Member'} src={profile?.avatarUrl ?? null} className="size-7" />
+                          <div>
+                            <p className="text-sm font-semibold">{profile?.name ?? 'Member'}</p>
+                            <p className="text-xs text-brand-gray">
+                              {member.role === 'admin' ? 'Admin' : 'Member'}
+                            </p>
+                          </div>
                         </div>
                         {member.role === 'admin' ? (
                           <ShieldCheck className="size-4 text-brand-red" />

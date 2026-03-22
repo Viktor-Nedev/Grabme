@@ -59,6 +59,11 @@ interface AppDataContextValue extends AppDataset {
     owner: { organizationId: string; profileId: string },
     input: NewEventInput & { imageFile?: File | null },
   ) => Promise<Event>;
+  updateEvent: (
+    eventId: string,
+    input: NewEventInput & { imageFile?: File | null; imageUrl?: string | null },
+  ) => Promise<Event>;
+  deleteEvent: (eventId: string) => Promise<void>;
   addComment: (profileId: string, input: NewCommentInput) => Promise<RequestComment>;
   createOrGetDirectConversation: (profileId: string, targetProfileId: string) => Promise<Conversation>;
   createGroupConversation: (
@@ -676,6 +681,84 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return event;
   };
 
+  const updateEvent: AppDataContextValue['updateEvent'] = async (eventId, input) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'events') : input.imageUrl ?? null;
+
+    const { data: row, error: updateError } = await supabase
+      .from('events')
+      .update({
+        title: input.title,
+        description: input.description,
+        event_date: input.eventDate,
+        address: input.address,
+        lat: input.lat,
+        lng: input.lng,
+        food_type: input.foodType,
+        capacity: input.capacity,
+        notes: input.notes,
+        image_url: imageUrl,
+      })
+      .eq('id', eventId)
+      .select('*')
+      .single();
+
+    if (updateError || !row) {
+      throw updateError ?? new Error('Failed to update event');
+    }
+
+    const event = mapEvent(row);
+    setData((current) => ({
+      ...current,
+      events: current.events.map((entry) => (entry.id === eventId ? event : entry)),
+    }));
+    return event;
+  };
+
+  const deleteEvent: AppDataContextValue['deleteEvent'] = async (eventId) => {
+    if (!supabase) throw new Error('Supabase not configured');
+
+    const { data: conversationRows, error: conversationSelectError } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('event_id', eventId);
+
+    if (conversationSelectError && !isMissingRelationError(conversationSelectError)) {
+      throw conversationSelectError;
+    }
+
+    const conversationIds = (conversationRows ?? []).map((row) => row.id);
+    if (conversationIds.length) {
+      const { error: conversationDeleteError } = await supabase
+        .from('conversations')
+        .delete()
+        .in('id', conversationIds);
+      if (conversationDeleteError && !isMissingRelationError(conversationDeleteError)) {
+        throw conversationDeleteError;
+      }
+    }
+
+    const { error: deleteError } = await supabase.from('events').delete().eq('id', eventId);
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    setData((current) => ({
+      ...current,
+      events: current.events.filter((entry) => entry.id !== eventId),
+      eventParticipants: current.eventParticipants.filter((entry) => entry.eventId !== eventId),
+      conversations: conversationIds.length
+        ? current.conversations.filter((conversation) => !conversationIds.includes(conversation.id))
+        : current.conversations,
+      conversationMembers: conversationIds.length
+        ? current.conversationMembers.filter((member) => !conversationIds.includes(member.conversationId))
+        : current.conversationMembers,
+      messages: conversationIds.length
+        ? current.messages.filter((message) => !conversationIds.includes(message.conversationId))
+        : current.messages,
+    }));
+  };
+
   const addComment: AppDataContextValue['addComment'] = async (profileId, input) => {
     if (!supabase) throw new Error('Supabase not configured');
     const { data: row, error: insertError } = await supabase
@@ -1226,6 +1309,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         updateRequest,
         deleteRequest,
         addEvent,
+        updateEvent,
+        deleteEvent,
         addComment,
         createOrGetDirectConversation,
         createGroupConversation,

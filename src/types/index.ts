@@ -44,6 +44,7 @@ export interface Organization extends Coordinates {
   capacity: number;
   foodTypes: FoodCategory[];
   verified: boolean;
+  showOnMap: boolean;
   createdAt: string;
 }
 
@@ -93,6 +94,7 @@ export interface Event extends Coordinates {
   notes: string;
   status: EventStatus;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface Conversation {

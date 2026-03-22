@@ -100,7 +100,9 @@ export function buildMapMarkers(data: AppDataset): MapMarker[] {
       requestMarker(request, data.profiles.find((profile) => profile.id === request.profileId)),
     );
 
-  const organizationMarkers = data.organizations.map(organizationMarker);
+  const organizationMarkers = data.organizations
+    .filter((organization) => organization.showOnMap)
+    .map(organizationMarker);
   const eventMarkers = data.events
     .filter((event) => event.status !== 'completed')
     .map((event) =>

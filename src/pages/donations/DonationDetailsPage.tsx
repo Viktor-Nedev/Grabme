@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MapPinned, MessageCircle, Navigation, PackageOpen } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
+import { Avatar } from '@/components/common/Avatar';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
@@ -21,6 +22,9 @@ export function DonationDetailsPage() {
   const [working, setWorking] = useState(false);
   const donation = donations.find((entry) => entry.id === id);
   const organization = organizations.find((entry) => entry.id === donation?.organizationId);
+  const organizationProfile = organization
+    ? profiles.find((entry) => entry.id === organization.profileId)
+    : null;
   const donorProfile = profiles.find((entry) => entry.id === donation?.profileId);
   const isOwner =
     currentProfile &&
@@ -93,9 +97,14 @@ export function DonationDetailsPage() {
             <div className="surface-muted p-4 md:col-span-2">
               <p className="text-sm text-brand-gray">Pickup location</p>
               <p className="mt-2 font-semibold">{donation.pickupAddress}</p>
-              <p className="mt-2 text-sm text-brand-gray">
-                {organization?.organizationName ?? donorProfile?.name ?? 'Community donor'}
-              </p>
+              <div className="mt-3 flex items-center gap-2 text-sm text-brand-gray">
+                <Avatar
+                  name={organization?.organizationName ?? donorProfile?.name ?? 'Community donor'}
+                  src={organizationProfile?.avatarUrl ?? donorProfile?.avatarUrl ?? null}
+                  className="size-7"
+                />
+                <span>{organization?.organizationName ?? donorProfile?.name ?? 'Community donor'}</span>
+              </div>
             </div>
           </div>
         </div>

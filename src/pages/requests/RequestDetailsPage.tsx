@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MessageCircle, MessageSquareMore, Navigation, PackagePlus, Trash2 } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
+import { Avatar } from '@/components/common/Avatar';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { inputClassName } from '@/components/forms/FormField';
 import { useAppData } from '@/hooks/useAppData';
@@ -196,8 +197,13 @@ export function RequestDetailsPage() {
           </div>
           <div className="surface-card p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-gray">Posted by</p>
-            <h3 className="mt-3 font-display text-2xl">{requester.name}</h3>
-            <p className="mt-2 text-sm text-brand-gray">{requester.locationText}</p>
+            <div className="mt-3 flex items-center gap-3">
+              <Avatar name={requester.name} src={requester.avatarUrl ?? null} className="size-9" />
+              <div>
+                <h3 className="font-display text-2xl">{requester.name}</h3>
+                <p className="mt-1 text-sm text-brand-gray">{requester.locationText}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

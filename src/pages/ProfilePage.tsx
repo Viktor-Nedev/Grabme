@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SectionHeading } from '@/components/common/SectionHeading';
+import { Avatar } from '@/components/common/Avatar';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +14,8 @@ export function ProfilePage() {
   const [supabaseMessage, setSupabaseMessage] = useState('');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(currentProfile?.avatarUrl ?? null);
   const [profileForm, setProfileForm] = useState({
     name: currentProfile?.name ?? '',
     phone: currentProfile?.phone ?? '',
@@ -24,6 +27,7 @@ export function ProfilePage() {
     organizationType: currentOrganization?.organizationType ?? '',
     operatingHours: currentOrganization?.operatingHours ?? '',
     capacity: currentOrganization?.capacity ?? 0,
+    showOnMap: currentOrganization?.showOnMap ?? true,
   });
 
   useEffect(() => {
@@ -33,7 +37,17 @@ export function ProfilePage() {
       phone: currentProfile.phone ?? '',
       locationText: currentProfile.locationText ?? '',
     });
+    setAvatarPreview(currentProfile.avatarUrl ?? null);
   }, [currentProfile]);
+
+  useEffect(() => {
+    if (!avatarFile) return;
+    const url = URL.createObjectURL(avatarFile);
+    setAvatarPreview(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [avatarFile]);
 
   useEffect(() => {
     if (!currentOrganization) return;
@@ -43,6 +57,7 @@ export function ProfilePage() {
       organizationType: currentOrganization.organizationType,
       operatingHours: currentOrganization.operatingHours ?? '',
       capacity: currentOrganization.capacity ?? 0,
+      showOnMap: currentOrganization.showOnMap,
     });
   }, [currentOrganization]);
 
@@ -56,7 +71,10 @@ export function ProfilePage() {
     <div className="space-y-6">
       <div className="surface-card p-8">
         <RoleBadge role={currentProfile.role} verified={Boolean(currentOrganization?.verified)} />
-        <SectionHeading title={currentProfile.name} description={currentProfile.email} />
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <Avatar name={currentProfile.name} src={avatarPreview} className="size-16 border border-white shadow-sm" />
+          <SectionHeading title={currentProfile.name} description={currentProfile.email} />
+        </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="surface-muted p-4">
             <p className="text-sm text-brand-gray">Phone</p>
@@ -104,12 +122,24 @@ export function ProfilePage() {
               event.preventDefault();
               if (!supabase) return;
               setSaving(true);
+              let avatarUrl = currentProfile.avatarUrl ?? null;
+              if (avatarFile) {
+                const filename = `avatars/${currentProfile.id}-${Date.now()}-${avatarFile.name}`;
+                const { error: uploadError } = await supabase.storage
+                  .from('grabme-assets')
+                  .upload(filename, avatarFile, { cacheControl: '3600', upsert: false });
+                if (!uploadError) {
+                  const { data: publicUrl } = supabase.storage.from('grabme-assets').getPublicUrl(filename);
+                  avatarUrl = publicUrl.publicUrl;
+                }
+              }
               await supabase
                 .from('profiles')
                 .update({
                   name: profileForm.name,
                   phone: profileForm.phone || null,
                   location_text: profileForm.locationText,
+                  avatar_url: avatarUrl,
                 })
                 .eq('id', currentProfile.id);
 
@@ -122,6 +152,7 @@ export function ProfilePage() {
                     organization_type: orgForm.organizationType,
                     operating_hours: orgForm.operatingHours,
                     capacity: Number(orgForm.capacity),
+                    show_on_map: orgForm.showOnMap,
                   })
                   .eq('id', currentOrganization.id);
               }
@@ -138,6 +169,14 @@ export function ProfilePage() {
                 value={profileForm.name}
                 onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
                 required
+              />
+            </FormField>
+            <FormField label="Profile photo">
+              <input
+                type="file"
+                accept="image/*"
+                className={inputClassName}
+                onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
               />
             </FormField>
             <FormField label="Phone">
@@ -197,6 +236,14 @@ export function ProfilePage() {
                     onChange={(event) => setOrgForm((current) => ({ ...current, capacity: Number(event.target.value) }))}
                   />
                 </FormField>
+                <label className="flex items-center gap-3 rounded-[20px] border border-brand-ink/8 bg-brand-cream/40 px-4 py-4 text-sm md:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={orgForm.showOnMap}
+                    onChange={() => setOrgForm((current) => ({ ...current, showOnMap: !current.showOnMap }))}
+                  />
+                  Show organization on the map (pickup hub)
+                </label>
               </>
             ) : null}
 

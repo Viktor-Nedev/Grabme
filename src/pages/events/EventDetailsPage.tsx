@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { CalendarDays, MapPinned, Navigation, Users } from 'lucide-react';
+import { CalendarDays, MapPinned, Navigation, Pencil, Trash2, Users } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
@@ -25,24 +25,23 @@ export function EventDetailsPage() {
     leaveEvent,
     ensureEventGroupConversation,
     joinConversation,
+    deleteEvent,
   } = useAppData();
   const { currentProfile } = useAuth();
   const [working, setWorking] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [autoJoinDone, setAutoJoinDone] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const event = events.find((entry) => entry.id === id);
   const organization = organizations.find((entry) => entry.id === event?.organizationId);
-
-  if (!event || !organization) {
-    return null;
-  }
-
-  const participants = eventParticipants.filter((participant) => participant.eventId === event.id);
+  const hasImage = Boolean(event?.imageUrl && /^(https?:\/\/|data:image\/|\/)/.test(event.imageUrl));
+  const showImage = hasImage && !imageFailed;
+  const participants = event ? eventParticipants.filter((participant) => participant.eventId === event.id) : [];
   const participantCount = participants.length;
   const hasJoined = Boolean(currentProfile && participants.some((participant) => participant.profileId === currentProfile.id));
 
   const eventConversation =
-    conversations.find((conversation) => conversation.eventId === event.id) ?? null;
+    event ? conversations.find((conversation) => conversation.eventId === event.id) ?? null : null;
   const inEventGroup = Boolean(
     currentProfile &&
       eventConversation &&
@@ -50,9 +49,12 @@ export function EventDetailsPage() {
         (member) => member.conversationId === eventConversation.id && member.profileId === currentProfile.id,
       ),
   );
-  const isEventOwner = currentProfile?.id === organization.profileId;
+  const isEventOwner = Boolean(currentProfile && organization && currentProfile.id === organization.profileId);
 
   const handleOpenGroupChat = async () => {
+    if (!event) {
+      return;
+    }
     if (!currentProfile) {
       protectedNavigate(`/events/${event.id}?openChat=1`);
       return;
@@ -87,6 +89,9 @@ export function EventDetailsPage() {
   };
 
   const handleParticipation = async () => {
+    if (!event) {
+      return;
+    }
     if (!currentProfile) {
       protectedNavigate(`/events/${event.id}`);
       return;
@@ -105,14 +110,37 @@ export function EventDetailsPage() {
     }
   };
 
+  const handleDeleteEvent = async () => {
+    if (!event || !isEventOwner) {
+      return;
+    }
+    const confirmed = window.confirm('Delete this event? This cannot be undone.');
+    if (!confirmed) {
+      return;
+    }
+    setWorking(true);
+    setNote(null);
+    try {
+      await deleteEvent(event.id);
+      navigate(ROUTES.events);
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : 'Unable to delete the event right now.');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   useEffect(() => {
+    if (!event) {
+      return;
+    }
     if (searchParams.get('openChat') === '1') {
       void handleOpenGroupChat();
     }
-  }, [searchParams]);
+  }, [event, searchParams]);
 
   useEffect(() => {
-    if (!currentProfile || !isEventOwner || autoJoinDone) {
+    if (!event || !currentProfile || !isEventOwner || autoJoinDone) {
       return;
     }
     setAutoJoinDone(true);
@@ -128,22 +156,24 @@ export function EventDetailsPage() {
         // Swallow auto-join errors; user can manually join.
       }
     })();
-  }, [
-    autoJoinDone,
-    currentProfile,
-    event.id,
-    eventConversation,
-    hasJoined,
-    inEventGroup,
-    isEventOwner,
-    joinConversation,
-    joinEvent,
-  ]);
+  }, [autoJoinDone, currentProfile, event, eventConversation, hasJoined, inEventGroup, isEventOwner, joinConversation, joinEvent]);
+
+  if (!event || !organization) {
+    return null;
+  }
 
   return (
     <section className="section-shell py-10">
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="surface-card p-8">
+          {showImage ? (
+            <img
+              src={event.imageUrl}
+              alt={event.title}
+              onError={() => setImageFailed(true)}
+              className="mb-6 h-56 w-full rounded-3xl object-cover"
+            />
+          ) : null}
           <SectionHeading eyebrow={event.foodType} title={event.title} description={event.description} />
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="surface-muted p-4">
@@ -206,6 +236,18 @@ export function EventDetailsPage() {
               <button type="button" onClick={handleOpenGroupChat} className="btn-ghost" disabled={working}>
                 {inEventGroup ? 'Open Group Chat' : 'Join Event Group'}
               </button>
+              {isEventOwner ? (
+                <>
+                  <Link to={`/events/${event.id}/edit`} className="btn-ghost" aria-label="Edit event">
+                    <Pencil className="size-4" />
+                    Edit Event
+                  </Link>
+                  <button type="button" onClick={handleDeleteEvent} className="btn-ghost text-red-600" disabled={working}>
+                    <Trash2 className="size-4" />
+                    Delete Event
+                  </button>
+                </>
+              ) : null}
             </div>
             {note ? <p className="mt-2 text-sm text-red-600">{note}</p> : null}
           </div>

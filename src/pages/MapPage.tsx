@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Clock3, LocateFixed, MapPinned, Sparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertBanner } from '@/components/common/AlertBanner';
@@ -33,6 +33,7 @@ export function MapPage() {
   const [nearMeOnly, setNearMeOnly] = useState(false);
   const [category, setCategory] = useState('all');
   const [mapStyle, setMapStyle] = useState<'custom' | 'satellite'>('custom');
+  const [mapboxFailed, setMapboxFailed] = useState(false);
   const [locationStatus, setLocationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported'>(
     'idle',
   );
@@ -57,40 +58,63 @@ export function MapPage() {
         lng: userCoords.lng,
       }
     : null;
-  const markersWithLive = liveLocationMarker ? [...markers, liveLocationMarker] : markers;
+  const markersWithLive = useMemo(
+    () => (liveLocationMarker ? [...markers, liveLocationMarker] : markers),
+    [liveLocationMarker, markers],
+  );
 
-  const filteredMarkers = markersWithLive.filter((marker) => {
-    if (marker.type === 'donation' && !showDonations) return false;
-    if (marker.type === 'request' && !showRequests) return false;
-    if (marker.type === 'organization' && !showOrganizations) return false;
-    if (marker.type === 'event' && !showEvents) return false;
-    if (urgentOnly && marker.color !== 'red') return false;
-    if (expiringOnly && marker.type === 'donation') {
-      const donation = donations.find((item) => item.id === marker.entityId);
-      return donation ? isExpiringSoon(donation.expiryDate, 48) : false;
-    }
-    const origin = userCoords ?? (currentProfile ? { lat: currentProfile.lat, lng: currentProfile.lng } : null);
-    if (nearMeOnly && origin) {
-      const distance = Number(formatDistanceKm(origin.lat, origin.lng, marker.lat, marker.lng).replace(' km', ''));
-      if (distance > 4) return false;
-    }
-    if (nearMeOnly && !origin) return false;
-    if (category !== 'all') {
-      if (marker.type === 'donation') {
-        return donations.find((item) => item.id === marker.entityId)?.category === category;
-      }
-      if (marker.type === 'request') {
-        return requests.find((item) => item.id === marker.entityId)?.foodType === category;
-      }
-      if (marker.type === 'event') {
-        return events.find((item) => item.id === marker.entityId)?.foodType === category;
-      }
-    }
-    if (query) {
-      return `${marker.title} ${marker.description} ${marker.locationText}`.toLowerCase().includes(query.toLowerCase());
-    }
-    return true;
-  });
+  const filteredMarkers = useMemo(
+    () =>
+      markersWithLive.filter((marker) => {
+        if (marker.type === 'donation' && !showDonations) return false;
+        if (marker.type === 'request' && !showRequests) return false;
+        if (marker.type === 'organization' && !showOrganizations) return false;
+        if (marker.type === 'event' && !showEvents) return false;
+        if (urgentOnly && marker.color !== 'red') return false;
+        if (expiringOnly && marker.type === 'donation') {
+          const donation = donations.find((item) => item.id === marker.entityId);
+          return donation ? isExpiringSoon(donation.expiryDate, 48) : false;
+        }
+        const origin = userCoords ?? (currentProfile ? { lat: currentProfile.lat, lng: currentProfile.lng } : null);
+        if (nearMeOnly && origin) {
+          const distance = Number(formatDistanceKm(origin.lat, origin.lng, marker.lat, marker.lng).replace(' km', ''));
+          if (distance > 4) return false;
+        }
+        if (nearMeOnly && !origin) return false;
+        if (category !== 'all') {
+          if (marker.type === 'donation') {
+            return donations.find((item) => item.id === marker.entityId)?.category === category;
+          }
+          if (marker.type === 'request') {
+            return requests.find((item) => item.id === marker.entityId)?.foodType === category;
+          }
+          if (marker.type === 'event') {
+            return events.find((item) => item.id === marker.entityId)?.foodType === category;
+          }
+        }
+        if (query) {
+          return `${marker.title} ${marker.description} ${marker.locationText}`.toLowerCase().includes(query.toLowerCase());
+        }
+        return true;
+      }),
+    [
+      category,
+      currentProfile,
+      donations,
+      events,
+      expiringOnly,
+      markersWithLive,
+      nearMeOnly,
+      query,
+      requests,
+      showDonations,
+      showEvents,
+      showOrganizations,
+      showRequests,
+      urgentOnly,
+      userCoords,
+    ],
+  );
 
   useEffect(() => {
     if (!focus) {
@@ -98,14 +122,20 @@ export function MapPage() {
     }
 
     const [type, entityId] = focus.split(':');
-    const focusedMarker = filteredMarkers.find((marker) => marker.type === type && marker.entityId === entityId);
+    const focusedMarker = markersWithLive.find((marker) => marker.type === type && marker.entityId === entityId);
     if (focusedMarker) {
-      setSelectedId(focusedMarker.id);
+      setSelectedId((current) => (current === focusedMarker.id ? current : focusedMarker.id));
+      setFocusTarget((current) => {
+        if (current && current.lat === focusedMarker.lat && current.lng === focusedMarker.lng) {
+          return current;
+        }
+        return { lat: focusedMarker.lat, lng: focusedMarker.lng, key: Date.now() };
+      });
       return;
     }
 
     setSelectedId(filteredMarkers[0]?.id ?? null);
-  }, [filteredMarkers, focus]);
+  }, [filteredMarkers, focus, markersWithLive]);
 
   const activeMarker = selectedId ? filteredMarkers.find((marker) => marker.id === selectedId) ?? null : null;
   const hasMapbox = Boolean(import.meta.env.VITE_MAPBOX_TOKEN);
@@ -113,6 +143,9 @@ export function MapPage() {
     mapStyle === 'satellite'
       ? 'mapbox://styles/mapbox/satellite-streets-v12'
       : 'mapbox://styles/vikdev/cmlo8l453002c01qu7avs7rf3';
+  useEffect(() => {
+    setMapboxFailed(false);
+  }, [styleUrl]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -290,7 +323,7 @@ export function MapPage() {
         </div>
 
         <div className="space-y-4">
-          {hasMapbox ? (
+          {hasMapbox && !mapboxFailed ? (
             <div className="relative">
               <MapboxMap
                 markers={filteredMarkers}
@@ -299,6 +332,7 @@ export function MapPage() {
                 className="h-[720px]"
                 styleUrl={styleUrl}
                 focus={focusTarget ?? (userCoords ? { lat: userCoords.lat, lng: userCoords.lng, key: 1 } : undefined)}
+                onError={() => setMapboxFailed(true)}
               />
               <button
                 type="button"
@@ -317,12 +351,21 @@ export function MapPage() {
               {activeMarker ? <MarkerPopup marker={activeMarker} onClose={() => setSelectedId(null)} /> : null}
             </div>
           ) : (
-            <MapSurface
-              markers={filteredMarkers}
-              selectedId={selectedId}
-              onSelect={(marker: MapMarker) => setSelectedId(marker.id)}
-              className="h-[720px]"
-            />
+            <div className="space-y-3">
+              {hasMapbox && mapboxFailed ? (
+                <AlertBanner
+                  title="Mapbox could not load"
+                  message="Showing the fallback map view. Check your Mapbox token and style access."
+                  tone="warning"
+                />
+              ) : null}
+              <MapSurface
+                markers={filteredMarkers}
+                selectedId={selectedId}
+                onSelect={(marker: MapMarker) => setSelectedId(marker.id)}
+                className="h-[720px]"
+              />
+            </div>
           )}
           <div className="surface-card p-5">
             <div className="flex items-center gap-2">
