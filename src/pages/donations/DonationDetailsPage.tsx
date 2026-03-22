@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { MapPinned, MessageCircle, Navigation, PackageOpen } from 'lucide-react';
+import { MapPinned, MessageCircle, Navigation, PackageOpen, Trash2 } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { Avatar } from '@/components/common/Avatar';
 import { RoleBadge } from '@/components/common/RoleBadge';
@@ -17,9 +17,10 @@ export function DonationDetailsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const protectedNavigate = useProtectedNavigation();
-  const { donations, organizations, profiles, createOrGetDirectConversation } = useAppData();
+  const { donations, organizations, profiles, createOrGetDirectConversation, deleteDonation } = useAppData();
   const { currentProfile } = useAuth();
   const [working, setWorking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const donation = donations.find((entry) => entry.id === id);
   const organization = organizations.find((entry) => entry.id === donation?.organizationId);
   const organizationProfile = organization
@@ -154,9 +155,31 @@ export function DonationDetailsPage() {
                 </button>
               ) : null}
               {isOwner ? (
-                <Link to={`/donations/${donation.id}/edit`} className="btn-ghost">
-                  Edit
-                </Link>
+                <>
+                  <Link to={`/donations/${donation.id}/edit`} className="btn-ghost">
+                    Edit
+                  </Link>
+                  <button
+                    type="button"
+                    className="btn-ghost text-red-600 hover:text-red-700"
+                    disabled={deleting}
+                    onClick={async () => {
+                      if (!window.confirm('Delete this donation? This cannot be undone.')) {
+                        return;
+                      }
+                      setDeleting(true);
+                      try {
+                        await deleteDonation(donation.id);
+                        navigate('/donations/feed');
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </>
               ) : null}
             </div>
           </div>

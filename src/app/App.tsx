@@ -3,7 +3,6 @@ import { ProtectedRoute, RoleProtectedRoute } from '@/components/common/Protecte
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { MainLayout } from '@/layouts/MainLayout';
 import { AIAlertsPage } from '@/pages/ai/AIAlertsPage';
-import { AIInsightsPage } from '@/pages/ai/AIInsightsPage';
 import { AuthPage } from '@/pages/auth/AuthPage';
 import { OrganizationDashboardPage } from '@/pages/dashboard/OrganizationDashboardPage';
 import { UserDashboardPage } from '@/pages/dashboard/UserDashboardPage';
@@ -63,7 +62,6 @@ export function App() {
 
               <Route element={<RoleProtectedRoute allowedRoles={['organization']} />}>
                 <Route path="/dashboard/org" element={<OrganizationDashboardPage />} />
-                <Route path="/ai/insights" element={<AIInsightsPage />} />
                 <Route path="/ai/alerts" element={<AIAlertsPage />} />
               </Route>
             </Route>

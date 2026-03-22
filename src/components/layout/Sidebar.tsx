@@ -1,4 +1,4 @@
-import { BarChart3, CalendarRange, HeartHandshake, LayoutDashboard, Settings, Sparkles, UserRound } from 'lucide-react';
+import { CalendarRange, HeartHandshake, LayoutDashboard, Settings, Sparkles, UserRound } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
@@ -14,7 +14,6 @@ const userItems = [
 
 const orgItems = [
   { label: 'Dashboard', to: ROUTES.orgDashboard, icon: LayoutDashboard },
-  { label: 'AI Insights', to: ROUTES.aiInsights, icon: BarChart3 },
   { label: 'Priority Center', to: ROUTES.aiAlerts, icon: Sparkles },
   { label: 'Events', to: ROUTES.events, icon: CalendarRange },
   { label: 'Profile', to: ROUTES.profile, icon: UserRound },

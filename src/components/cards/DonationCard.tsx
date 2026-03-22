@@ -41,17 +41,14 @@ export function DonationCard({ donation, organizationName, donorName }: Donation
           {donation.pickupAddress}
         </div>
       </div>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-brand-ink/8 pt-4">
+      <div className="mt-5 border-t border-brand-ink/8 pt-4">
         <p className="text-sm font-medium text-brand-gray">{organizationName ?? donorName ?? 'Community donor'}</p>
-        <div className="flex gap-2">
-          <Link to={`/donations/${donation.id}`} className="btn-ghost px-4 py-2 text-sm">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <Link to={`/donations/${donation.id}`} className="btn-primary w-full px-4 py-2 text-center text-sm">
             View Details
           </Link>
-          <Link to={`/donations/${donation.id}?openChat=1`} className="btn-ghost px-4 py-2 text-sm">
+          <Link to={`/donations/${donation.id}?openChat=1`} className="btn-ghost w-full px-4 py-2 text-center text-sm">
             Chat
-          </Link>
-          <Link to={`/map?focus=donation:${donation.id}`} className="btn-primary px-4 py-2 text-sm">
-            View on Map
           </Link>
         </div>
       </div>

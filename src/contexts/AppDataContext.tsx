@@ -49,6 +49,7 @@ interface AppDataContextValue extends AppDataset {
     donationId: string,
     input: NewDonationInput & { imageFile?: File | null },
   ) => Promise<Donation>;
+  deleteDonation: (donationId: string) => Promise<void>;
   addRequest: (profileId: string, input: NewRequestInput & { imageFile?: File | null }) => Promise<FoodRequest>;
   updateRequest: (
     requestId: string,
@@ -465,6 +466,22 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return donation;
   };
 
+  const deleteDonation: AppDataContextValue['deleteDonation'] = async (donationId) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { error: deleteError } = await supabase.from('donations').delete().eq('id', donationId);
+    if (deleteError) {
+      throw deleteError;
+    }
+    setData((current) => {
+      const remainingDonations = current.donations.filter((entry) => entry.id !== donationId);
+      return {
+        ...current,
+        donations: remainingDonations,
+        aiInsights: buildInsights(remainingDonations, current.requests),
+      };
+    });
+  };
+
   const addRequest: AppDataContextValue['addRequest'] = async (profileId, input) => {
     if (!supabase) throw new Error('Supabase not configured');
     const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'requests') : null;
@@ -785,6 +802,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   const createGroupConversation: AppDataContextValue['createGroupConversation'] = async (profileId, input) => {
     if (!supabase) throw new Error('Supabase not configured');
+    let conversationRow: any = null;
     const { data: row, error: insertError } = await supabase
       .from('conversations')
       .insert({
@@ -796,11 +814,25 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       .select('*')
       .single();
 
-    if (insertError || !row) {
+    if (insertError && isDuplicateKeyError(insertError) && input.eventId) {
+      const { data: existingGroup } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('event_id', input.eventId)
+        .eq('type', 'group')
+        .limit(1);
+      if (existingGroup?.[0]) {
+        conversationRow = existingGroup[0];
+      } else {
+        throw insertError;
+      }
+    } else if (insertError || !row) {
       throw insertError ?? new Error('Failed to create group conversation');
+    } else {
+      conversationRow = row;
     }
 
-    const conversation = mapConversation(row);
+    const conversation = mapConversation(conversationRow);
     const uniqueMemberIds = Array.from(new Set([profileId, ...input.memberIds]));
     const memberRows = uniqueMemberIds.map((memberId) => ({
       conversation_id: conversation.id,
@@ -1082,6 +1114,23 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       .select('*')
       .single();
 
+    if (insertError && isDuplicateKeyError(insertError)) {
+      const { data: existingMember } = await supabase
+        .from('conversation_members')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .eq('profile_id', profileId)
+        .limit(1);
+      if (existingMember?.[0]) {
+        const member = mapConversationMember(existingMember[0]);
+        setData((current) => ({
+          ...current,
+          conversationMembers: upsertById(current.conversationMembers, member),
+        }));
+        return member;
+      }
+    }
+
     if (insertError || !row) {
       throw insertError ?? new Error('Failed to join conversation');
     }
@@ -1305,6 +1354,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         completeOrganizationOnboarding,
         addDonation,
         updateDonation,
+        deleteDonation,
         addRequest,
         updateRequest,
         deleteRequest,

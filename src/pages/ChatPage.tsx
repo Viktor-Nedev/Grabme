@@ -38,6 +38,7 @@ export function ChatPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
     searchParams.get('conversation'),
   );
+  const [sampleSelectedId, setSampleSelectedId] = useState('sample-direct-1');
   const [messageText, setMessageText] = useState('');
   const [groupName, setGroupName] = useState('');
   const [addingMemberId, setAddingMemberId] = useState('');
@@ -80,8 +81,51 @@ export function ChatPage() {
     }
   }, [myConversations, navigate, selectedConversationId]);
 
+  const hasRealConversations = myConversations.length > 0;
   const selectedConversation =
     myConversations.find((conversation) => conversation.id === selectedConversationId) ?? null;
+
+  const sampleProfiles = useMemo(
+    () => ({
+      'sample-user-1': { id: 'sample-user-1', name: 'Maya Johnson', avatarUrl: null },
+      'sample-user-2': { id: 'sample-user-2', name: 'Ravi Patel', avatarUrl: null },
+      'sample-user-3': { id: 'sample-user-3', name: 'Leila Nguyen', avatarUrl: null },
+      'sample-user-4': { id: 'sample-user-4', name: 'Amir Hassan', avatarUrl: null },
+    }),
+    [],
+  );
+
+  const sampleConversations = useMemo(
+    () => [
+      { id: 'sample-direct-1', type: 'direct' as const, title: 'Maya Johnson' },
+      { id: 'sample-direct-2', type: 'direct' as const, title: 'Ravi Patel' },
+      { id: 'sample-group-1', type: 'group' as const, title: 'East Zone Pantry Drop' },
+      { id: 'sample-group-2', type: 'group' as const, title: 'Weekend Meal Pack Drive' },
+    ],
+    [],
+  );
+
+  const sampleMessages = useMemo(
+    () => ({
+      'sample-direct-1': [
+        { id: 'm1', senderId: 'sample-user-1', content: 'Hi! Are the meal packs still available?', time: 'Today 09:12' },
+        { id: 'm2', senderId: 'me', content: 'Yes, pickup starts at 2 PM. Want me to reserve a box?', time: 'Today 09:14' },
+      ],
+      'sample-direct-2': [
+        { id: 'm1', senderId: 'sample-user-2', content: 'Thanks for posting the donation. Any dietary info?', time: 'Today 08:40' },
+        { id: 'm2', senderId: 'me', content: 'Gluten-free and nut-free. Packaged in sealed trays.', time: 'Today 08:42' },
+      ],
+      'sample-group-1': [
+        { id: 'm1', senderId: 'sample-user-3', content: 'We need 3 volunteers for setup at 10 AM.', time: 'Yesterday 17:05' },
+        { id: 'm2', senderId: 'me', content: 'I can cover one slot and bring signage.', time: 'Yesterday 17:10' },
+      ],
+      'sample-group-2': [
+        { id: 'm1', senderId: 'sample-user-4', content: 'We are low on meal packs for tomorrow.', time: 'Today 07:55' },
+        { id: 'm2', senderId: 'me', content: 'Adding 40 more packs from today’s donation.', time: 'Today 07:58' },
+      ],
+    }),
+    [],
+  );
 
   const selectedMembers = selectedConversation
     ? conversationMembers.filter((member) => member.conversationId === selectedConversation.id)
@@ -148,6 +192,133 @@ export function ChatPage() {
 
   if (!currentProfile) {
     return null;
+  }
+
+  if (!hasRealConversations) {
+    const sampleDirects = sampleConversations.filter((conversation) => conversation.type === 'direct');
+    const sampleGroups = sampleConversations.filter((conversation) => conversation.type === 'group');
+    const activeSample = sampleConversations.find((conversation) => conversation.id === sampleSelectedId) ?? sampleConversations[0];
+    const activeMessages = (activeSample ? sampleMessages[activeSample.id as keyof typeof sampleMessages] : []) ?? [];
+
+    return (
+      <section className="section-shell py-10">
+        <SectionHeading
+          eyebrow="Chat"
+          title="Direct chats and group coordination"
+          description="Sample conversations are shown until you start a real chat from Requests, Donations, or Events."
+        />
+
+        <div className="mt-8 grid gap-6 xl:grid-cols-[0.28fr_0.48fr_0.24fr]">
+          <div className="surface-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gray">Direct chats</p>
+            <div className="mt-3 space-y-2">
+              {sampleDirects.map((conversation) => (
+                <button
+                  key={conversation.id}
+                  type="button"
+                  className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                    sampleSelectedId === conversation.id
+                      ? 'border-brand-red bg-brand-red/5'
+                      : 'border-brand-ink/10 bg-white'
+                  }`}
+                  onClick={() => setSampleSelectedId(conversation.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar name={conversation.title} src={null} className="size-8" />
+                    <div>
+                      <p className="text-sm font-semibold">{conversation.title}</p>
+                      <p className="mt-1 text-xs text-brand-gray">Sample chat</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-brand-gray">Groups</p>
+            <div className="mt-3 space-y-2">
+              {sampleGroups.map((conversation) => (
+                <button
+                  key={conversation.id}
+                  type="button"
+                  className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                    sampleSelectedId === conversation.id
+                      ? 'border-brand-red bg-brand-red/5'
+                      : 'border-brand-ink/10 bg-white'
+                  }`}
+                  onClick={() => setSampleSelectedId(conversation.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex -space-x-2">
+                      {Object.values(sampleProfiles)
+                        .slice(0, 3)
+                        .map((profile) => (
+                          <Avatar key={profile.id} name={profile.name} src={profile.avatarUrl ?? null} className="size-7 border border-white" />
+                        ))}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{conversation.title}</p>
+                      <p className="mt-1 text-xs text-brand-gray">Sample group</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="surface-card flex min-h-[620px] flex-col p-5">
+            <div className="flex items-start justify-between gap-3 border-b border-brand-ink/10 pb-4">
+              <div>
+                <p className="font-display text-2xl">{activeSample?.title ?? 'Conversation'}</p>
+                <p className="mt-1 text-sm text-brand-gray">Sample conversation</p>
+              </div>
+              <span className="rounded-full bg-brand-yellow/20 px-3 py-1 text-xs font-semibold text-brand-ink">
+                Demo
+              </span>
+            </div>
+
+            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
+              {activeMessages.map((message) => {
+                const isMine = message.senderId === 'me';
+                const sender = sampleProfiles[message.senderId as keyof typeof sampleProfiles];
+                return (
+                  <div key={message.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    {!isMine ? (
+                      <Avatar name={sender?.name ?? 'Member'} src={sender?.avatarUrl ?? null} className="size-7" />
+                    ) : null}
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                        isMine ? 'bg-brand-red text-white' : 'bg-brand-cream/70 text-brand-ink'
+                      }`}
+                    >
+                      <p className="text-xs font-semibold opacity-80">{isMine ? 'You' : sender?.name ?? 'Member'}</p>
+                      <p className="mt-1 text-sm">{message.content}</p>
+                      <p className="mt-2 text-[11px] opacity-70">{message.time}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex gap-2 border-t border-brand-ink/10 pt-4">
+              <input className={inputClassName} placeholder="Start a real chat to send messages" disabled />
+              <button type="button" className="btn-primary px-4 py-3" disabled>
+                <SendHorizontal className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="surface-card p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gray">Group controls</p>
+            <div className="mt-3 rounded-2xl bg-brand-cream/60 p-4 text-sm text-brand-gray">
+              Group tools appear once you create or join a real conversation.
+            </div>
+            <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-brand-gray">
+              Start a real chat from a request, donation, or event to enable messaging.
+            </div>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (

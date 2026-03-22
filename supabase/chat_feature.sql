@@ -200,3 +200,16 @@ create policy "event_participants_delete_self_or_owner" on public.event_particip
         and o.profile_id = auth.uid()
     )
   );
+
+-- Grants (avoid 403s for anon/authenticated with RLS still enforcing access)
+grant select on public.conversations to anon, authenticated;
+grant select, insert, update, delete on public.conversations to authenticated;
+
+grant select on public.conversation_members to anon, authenticated;
+grant select, insert, update, delete on public.conversation_members to authenticated;
+
+grant select on public.messages to anon, authenticated;
+grant select, insert, update, delete on public.messages to authenticated;
+
+grant select on public.event_participants to anon, authenticated;
+grant select, insert, update, delete on public.event_participants to authenticated;

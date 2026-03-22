@@ -73,19 +73,6 @@ export function Navbar() {
               Chat
             </NavLink>
           ) : null}
-          {currentProfile?.role === 'organization' ? (
-            <NavLink
-              to={ROUTES.aiInsights}
-              className={({ isActive }) =>
-                cn(
-                  'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
-                  isActive && 'text-brand-ink'
-                )
-              }
-            >
-              AI Insights
-            </NavLink>
-          ) : null}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">

@@ -105,19 +105,32 @@ alter table public.events enable row level security;
 alter table public.comments enable row level security;
 
 -- Profiles policies
+drop policy if exists "profiles_select_all" on public.profiles;
 create policy "profiles_select_all" on public.profiles for select using (true);
+
+drop policy if exists "profiles_insert_self" on public.profiles;
 create policy "profiles_insert_self" on public.profiles for insert with check (auth.uid() = id);
+
+drop policy if exists "profiles_update_self" on public.profiles;
 create policy "profiles_update_self" on public.profiles for update using (auth.uid() = id);
 
 -- Organizations policies
+drop policy if exists "organizations_select_all" on public.organizations;
 create policy "organizations_select_all" on public.organizations for select using (true);
+
+drop policy if exists "organizations_insert_owner" on public.organizations;
 create policy "organizations_insert_owner" on public.organizations
   for insert with check (auth.uid() = profile_id);
+
+drop policy if exists "organizations_update_owner" on public.organizations;
 create policy "organizations_update_owner" on public.organizations
   for update using (auth.uid() = profile_id);
 
 -- Donations policies
+drop policy if exists "donations_select_all" on public.donations;
 create policy "donations_select_all" on public.donations for select using (true);
+
+drop policy if exists "donations_insert_owner" on public.donations;
 create policy "donations_insert_owner" on public.donations
   for insert with check (
     (profile_id = auth.uid())
@@ -126,6 +139,8 @@ create policy "donations_insert_owner" on public.donations
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
+
+drop policy if exists "donations_update_owner" on public.donations;
 create policy "donations_update_owner" on public.donations
   for update using (
     (profile_id = auth.uid())
@@ -134,6 +149,8 @@ create policy "donations_update_owner" on public.donations
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
+
+drop policy if exists "donations_delete_owner" on public.donations;
 create policy "donations_delete_owner" on public.donations
   for delete using (
     (profile_id = auth.uid())
@@ -144,16 +161,26 @@ create policy "donations_delete_owner" on public.donations
   );
 
 -- Requests policies
+drop policy if exists "requests_select_all" on public.requests;
 create policy "requests_select_all" on public.requests for select using (true);
+
+drop policy if exists "requests_insert_owner" on public.requests;
 create policy "requests_insert_owner" on public.requests
   for insert with check (auth.uid() = profile_id);
+
+drop policy if exists "requests_update_owner" on public.requests;
 create policy "requests_update_owner" on public.requests
   for update using (auth.uid() = profile_id);
+
+drop policy if exists "requests_delete_owner" on public.requests;
 create policy "requests_delete_owner" on public.requests
   for delete using (auth.uid() = profile_id);
 
 -- Events policies
+drop policy if exists "events_select_all" on public.events;
 create policy "events_select_all" on public.events for select using (true);
+
+drop policy if exists "events_insert_owner" on public.events;
 create policy "events_insert_owner" on public.events
   for insert with check (
     exists (
@@ -161,6 +188,8 @@ create policy "events_insert_owner" on public.events
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
+
+drop policy if exists "events_update_owner" on public.events;
 create policy "events_update_owner" on public.events
   for update using (
     exists (
@@ -168,6 +197,8 @@ create policy "events_update_owner" on public.events
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
+
+drop policy if exists "events_delete_owner" on public.events;
 create policy "events_delete_owner" on public.events
   for delete using (
     exists (
@@ -177,11 +208,18 @@ create policy "events_delete_owner" on public.events
   );
 
 -- Comments policies
+drop policy if exists "comments_select_all" on public.comments;
 create policy "comments_select_all" on public.comments for select using (true);
+
+drop policy if exists "comments_insert_owner" on public.comments;
 create policy "comments_insert_owner" on public.comments
   for insert with check (auth.uid() = profile_id);
+
+drop policy if exists "comments_update_owner" on public.comments;
 create policy "comments_update_owner" on public.comments
   for update using (auth.uid() = profile_id);
+
+drop policy if exists "comments_delete_owner" on public.comments;
 create policy "comments_delete_owner" on public.comments
   for delete using (auth.uid() = profile_id);
 
@@ -312,7 +350,7 @@ create policy "conversation_members_insert_member_or_admin" on public.conversati
     auth.uid() = profile_id
     or exists (
       select 1 from public.conversations c
-      where c.id = conversation_members.conversation_id
+      where c.id = conversation_id
         and c.created_by_profile_id = auth.uid()
     )
   );
@@ -322,7 +360,7 @@ create policy "conversation_members_update_admin" on public.conversation_members
   for update using (
     exists (
       select 1 from public.conversations c
-      where c.id = conversation_members.conversation_id
+      where c.id = conversation_id
         and c.created_by_profile_id = auth.uid()
     )
   );
@@ -333,7 +371,7 @@ create policy "conversation_members_delete_self_or_admin" on public.conversation
     auth.uid() = profile_id
     or exists (
       select 1 from public.conversations c
-      where c.id = conversation_members.conversation_id
+      where c.id = conversation_id
         and c.created_by_profile_id = auth.uid()
     )
   );
@@ -390,19 +428,36 @@ create policy "event_participants_delete_self_or_owner" on public.event_particip
     )
   );
 
+-- Grants (avoid 403s for anon/authenticated with RLS still enforcing access)
+grant select on public.conversations to anon, authenticated;
+grant select, insert, update, delete on public.conversations to authenticated;
+
+grant select on public.conversation_members to anon, authenticated;
+grant select, insert, update, delete on public.conversation_members to authenticated;
+
+grant select on public.messages to anon, authenticated;
+grant select, insert, update, delete on public.messages to authenticated;
+
+grant select on public.event_participants to anon, authenticated;
+grant select, insert, update, delete on public.event_participants to authenticated;
+
 -- Storage bucket + policies
 insert into storage.buckets (id, name, public)
 values ('grabme-assets', 'grabme-assets', true)
 on conflict (id) do nothing;
 
+drop policy if exists "assets_read_all" on storage.objects;
 create policy "assets_read_all" on storage.objects
   for select using (bucket_id = 'grabme-assets');
 
+drop policy if exists "assets_insert_auth" on storage.objects;
 create policy "assets_insert_auth" on storage.objects
   for insert with check (bucket_id = 'grabme-assets' and auth.role() = 'authenticated');
 
+drop policy if exists "assets_update_owner" on storage.objects;
 create policy "assets_update_owner" on storage.objects
   for update using (bucket_id = 'grabme-assets' and auth.uid() = owner);
 
+drop policy if exists "assets_delete_owner" on storage.objects;
 create policy "assets_delete_owner" on storage.objects
   for delete using (bucket_id = 'grabme-assets' and auth.uid() = owner);
