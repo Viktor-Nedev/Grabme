@@ -23,6 +23,7 @@ export function RequestDetailsPage() {
   if (!request || !requester) {
     return null;
   }
+  const isOwner = currentProfile?.id === request.profileId;
 
   const handleCommentSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -128,6 +129,11 @@ export function RequestDetailsPage() {
                 <PackagePlus className="size-4" />
                 Offer Food
               </button>
+              {isOwner ? (
+                <Link to={`/requests/${request.id}/edit`} className="btn-ghost">
+                  Edit
+                </Link>
+              ) : null}
             </div>
           </div>
           <div className="surface-card p-6">

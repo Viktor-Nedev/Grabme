@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormField, inputClassName } from '@/components/forms/FormField';
+import { MapPicker } from '@/components/map/MapPicker';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { FOOD_CATEGORIES } from '@/utils/constants';
+import { DEFAULT_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
 
 export function CreateRequestPage() {
   const navigate = useNavigate();
@@ -12,6 +13,11 @@ export function CreateRequestPage() {
   const { currentProfile } = useAuth();
   const [shareLocation, setShareLocation] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [useMapPick, setUseMapPick] = useState(false);
+  const [coords, setCoords] = useState({
+    lat: currentProfile?.lat ?? DEFAULT_COORDS.lat,
+    lng: currentProfile?.lng ?? DEFAULT_COORDS.lng,
+  });
 
   if (!currentProfile) {
     return null;
@@ -29,8 +35,16 @@ export function CreateRequestPage() {
       urgency: form.get('urgency') as 'low' | 'medium' | 'high' | 'critical',
       foodType: form.get('foodType') as (typeof FOOD_CATEGORIES)[number],
       locationText: String(form.get('locationText')),
-      lat: shareLocation ? currentProfile.lat : Number(form.get('lat')),
-      lng: shareLocation ? currentProfile.lng : Number(form.get('lng')),
+      lat: shareLocation
+        ? currentProfile.lat ?? DEFAULT_COORDS.lat
+        : useMapPick
+          ? coords.lat
+          : Number(form.get('lat')),
+      lng: shareLocation
+        ? currentProfile.lng ?? DEFAULT_COORDS.lng
+        : useMapPick
+          ? coords.lng
+          : Number(form.get('lng')),
       imageUrl: '',
       imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
     });
@@ -85,12 +99,24 @@ export function CreateRequestPage() {
           </label>
           {!shareLocation ? (
             <>
-              <FormField label="Latitude">
-                <input name="lat" type="number" step="0.0001" defaultValue={currentProfile.lat} className={inputClassName} required />
-              </FormField>
-              <FormField label="Longitude">
-                <input name="lng" type="number" step="0.0001" defaultValue={currentProfile.lng} className={inputClassName} required />
-              </FormField>
+              <label className="md:col-span-2 flex items-center gap-3 rounded-[20px] border border-brand-ink/8 bg-brand-cream/40 px-4 py-4 text-sm">
+                <input type="checkbox" checked={useMapPick} onChange={() => setUseMapPick((value) => !value)} />
+                Pick location on map
+              </label>
+              {useMapPick ? (
+                <div className="md:col-span-2">
+                  <MapPicker value={coords} onChange={setCoords} />
+                </div>
+              ) : (
+                <>
+                  <FormField label="Latitude">
+                    <input name="lat" type="number" step="0.0001" defaultValue={currentProfile.lat} className={inputClassName} required />
+                  </FormField>
+                  <FormField label="Longitude">
+                    <input name="lng" type="number" step="0.0001" defaultValue={currentProfile.lng} className={inputClassName} required />
+                  </FormField>
+                </>
+              )}
             </>
           ) : null}
           <FormField label="Request image" className="md:col-span-2">

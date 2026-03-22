@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock3, MapPinned, Plus, Sparkles } from 'lucide-react';
+import { Clock3, MapPinned, Sparkles } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertBanner } from '@/components/common/AlertBanner';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -11,7 +11,6 @@ import { MapboxMap } from '@/components/map/MapboxMap';
 import { MarkerPopup } from '@/components/map/MarkerPopup';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { FOOD_CATEGORIES } from '@/utils/constants';
 import { formatDistanceKm, isExpiringSoon } from '@/utils/formatters';
 import { buildMapMarkers } from '@/utils/map';
@@ -21,7 +20,6 @@ export function MapPage() {
   const data = useAppData();
   const { donations, requests, organizations, events, profiles, aiInsights } = data;
   const { currentProfile, isAuthenticated } = useAuth();
-  const protectedNavigate = useProtectedNavigation();
   const [searchParams] = useSearchParams();
   const focus = searchParams.get('focus');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -139,20 +137,7 @@ export function MapPage() {
         eyebrow="Public Map"
         title="Live view of donations, requests, organizations, and events"
         description="This map stays visible to everyone. Protected actions still require login."
-        action={
-          <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={() => protectedNavigate('/requests/new')} className="btn-primary">
-              <Plus className="size-4" />
-              Create Request
-            </button>
-            <button type="button" onClick={() => protectedNavigate('/donations/new')} className="btn-secondary">
-              Donate Food
-            </button>
-            <button type="button" onClick={() => protectedNavigate('/events/new')} className="btn-ghost">
-              Join or Create Event
-            </button>
-          </div>
-        }
+        action={null}
       />
 
       {!isAuthenticated ? (

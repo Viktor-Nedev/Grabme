@@ -46,7 +46,8 @@ export interface Organization extends Coordinates {
 
 export interface Donation extends Coordinates {
   id: string;
-  organizationId: string;
+  organizationId?: string | null;
+  profileId?: string | null;
   title: string;
   description: string;
   category: FoodCategory;
@@ -206,6 +207,7 @@ export interface OrganizationOnboardingInput extends Coordinates {
 }
 
 export interface NewDonationInput extends Coordinates {
+  profileId?: string | null;
   title: string;
   description: string;
   category: FoodCategory;

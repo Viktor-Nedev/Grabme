@@ -55,6 +55,11 @@ export const DEFAULT_MAP_BOUNDS = {
   maxLng: -87.54,
 };
 
+export const DEFAULT_COORDS = {
+  lat: 41.8781,
+  lng: -87.6298,
+};
+
 export const QUICK_STATS = [
   { label: 'Meals redirected this week', value: '4,820+' },
   { label: 'Requests fulfilled this month', value: '1,460+' },

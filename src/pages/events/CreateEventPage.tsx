@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormField, inputClassName } from '@/components/forms/FormField';
+import { MapPicker } from '@/components/map/MapPicker';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { FOOD_CATEGORIES } from '@/utils/constants';
+import { DEFAULT_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
 
 export function CreateEventPage() {
   const navigate = useNavigate();
   const { addEvent } = useAppData();
   const { currentOrganization } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [useMapPick, setUseMapPick] = useState(true);
+  const [coords, setCoords] = useState({
+    lat: currentOrganization?.lat ?? DEFAULT_COORDS.lat,
+    lng: currentOrganization?.lng ?? DEFAULT_COORDS.lng,
+  });
 
   if (!currentOrganization) {
     return null;
@@ -25,8 +31,8 @@ export function CreateEventPage() {
       description: String(form.get('description')),
       eventDate: new Date(`${String(form.get('date'))}T${String(form.get('time'))}:00`).toISOString(),
       address: String(form.get('address')),
-      lat: Number(form.get('lat')),
-      lng: Number(form.get('lng')),
+      lat: useMapPick ? coords.lat : Number(form.get('lat')),
+      lng: useMapPick ? coords.lng : Number(form.get('lng')),
       foodType: form.get('foodType') as (typeof FOOD_CATEGORIES)[number],
       capacity: Number(form.get('capacity')),
       notes: String(form.get('notes')),
@@ -69,12 +75,24 @@ export function CreateEventPage() {
           <FormField label="Address" className="md:col-span-2">
             <input name="address" defaultValue={currentOrganization.address} className={inputClassName} required />
           </FormField>
-          <FormField label="Latitude">
-            <input name="lat" type="number" step="0.0001" defaultValue={currentOrganization.lat} className={inputClassName} required />
-          </FormField>
-          <FormField label="Longitude">
-            <input name="lng" type="number" step="0.0001" defaultValue={currentOrganization.lng} className={inputClassName} required />
-          </FormField>
+          <label className="md:col-span-2 flex items-center gap-3 rounded-[20px] border border-brand-ink/8 bg-brand-cream/40 px-4 py-4 text-sm">
+            <input type="checkbox" checked={useMapPick} onChange={() => setUseMapPick((value) => !value)} />
+            Pick location on map
+          </label>
+          {useMapPick ? (
+            <div className="md:col-span-2">
+              <MapPicker value={coords} onChange={setCoords} />
+            </div>
+          ) : (
+            <>
+              <FormField label="Latitude">
+                <input name="lat" type="number" step="0.0001" defaultValue={currentOrganization.lat} className={inputClassName} required />
+              </FormField>
+              <FormField label="Longitude">
+                <input name="lng" type="number" step="0.0001" defaultValue={currentOrganization.lng} className={inputClassName} required />
+              </FormField>
+            </>
+          )}
           <FormField label="Capacity">
             <input name="capacity" type="number" min="1" defaultValue={80} className={inputClassName} required />
           </FormField>

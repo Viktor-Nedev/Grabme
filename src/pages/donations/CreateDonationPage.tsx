@@ -1,18 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormField, inputClassName } from '@/components/forms/FormField';
+import { MapPicker } from '@/components/map/MapPicker';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
-import { FOOD_CATEGORIES } from '@/utils/constants';
+import { DEFAULT_COORDS, FOOD_CATEGORIES } from '@/utils/constants';
 
 export function CreateDonationPage() {
   const navigate = useNavigate();
   const { addDonation } = useAppData();
-  const { currentOrganization } = useAuth();
+  const { currentOrganization, currentProfile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [useMapPick, setUseMapPick] = useState(true);
+  const [coords, setCoords] = useState({
+    lat: currentOrganization?.lat ?? currentProfile?.lat ?? DEFAULT_COORDS.lat,
+    lng: currentOrganization?.lng ?? currentProfile?.lng ?? DEFAULT_COORDS.lng,
+  });
 
-  if (!currentOrganization) {
+  if (!currentProfile) {
     return null;
   }
 
@@ -20,22 +26,28 @@ export function CreateDonationPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setSubmitting(true);
-    const donation = await addDonation(currentOrganization.id, {
+    const donation = await addDonation(
+      {
+        organizationId: currentOrganization?.id ?? null,
+        profileId: currentOrganization ? null : currentProfile.id,
+      },
+      {
       title: String(form.get('title')),
       description: String(form.get('description')),
       category: form.get('category') as (typeof FOOD_CATEGORIES)[number],
       quantity: String(form.get('quantity')),
       expiryDate: new Date(`${String(form.get('expiryDate'))}T${String(form.get('expiryTime'))}:00`).toISOString(),
       pickupAddress: String(form.get('pickupAddress')),
-      lat: Number(form.get('lat')),
-      lng: Number(form.get('lng')),
+      lat: useMapPick ? coords.lat : Number(form.get('lat')),
+      lng: useMapPick ? coords.lng : Number(form.get('lng')),
       availableFrom: new Date(`${String(form.get('availableFrom'))}T${String(form.get('availableFromTime'))}:00`).toISOString(),
       availableUntil: new Date(`${String(form.get('availableUntil'))}T${String(form.get('availableUntilTime'))}:00`).toISOString(),
       storageType: String(form.get('storageType')),
       notes: String(form.get('notes')),
       imageUrl: '',
       imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
-    });
+    },
+    );
     setSubmitting(false);
     navigate(`/donations/${donation.id}`);
   };
@@ -89,14 +101,45 @@ export function CreateDonationPage() {
             <input name="availableUntilTime" type="time" className={inputClassName} required />
           </FormField>
           <FormField label="Pickup address" className="md:col-span-2">
-            <input name="pickupAddress" defaultValue={currentOrganization.address} className={inputClassName} required />
+            <input
+              name="pickupAddress"
+              defaultValue={currentOrganization?.address ?? currentProfile.locationText}
+              className={inputClassName}
+              required
+            />
           </FormField>
-          <FormField label="Latitude">
-            <input name="lat" type="number" step="0.0001" defaultValue={currentOrganization.lat} className={inputClassName} required />
-          </FormField>
-          <FormField label="Longitude">
-            <input name="lng" type="number" step="0.0001" defaultValue={currentOrganization.lng} className={inputClassName} required />
-          </FormField>
+          <label className="md:col-span-2 flex items-center gap-3 rounded-[20px] border border-brand-ink/8 bg-brand-cream/40 px-4 py-4 text-sm">
+            <input type="checkbox" checked={useMapPick} onChange={() => setUseMapPick((value) => !value)} />
+            Pick location on map
+          </label>
+          {useMapPick ? (
+            <div className="md:col-span-2">
+              <MapPicker value={coords} onChange={setCoords} />
+            </div>
+          ) : (
+            <>
+              <FormField label="Latitude">
+                <input
+                  name="lat"
+                  type="number"
+                  step="0.0001"
+                  defaultValue={currentOrganization?.lat ?? currentProfile.lat}
+                  className={inputClassName}
+                  required
+                />
+              </FormField>
+              <FormField label="Longitude">
+                <input
+                  name="lng"
+                  type="number"
+                  step="0.0001"
+                  defaultValue={currentOrganization?.lng ?? currentProfile.lng}
+                  className={inputClassName}
+                  required
+                />
+              </FormField>
+            </>
+          )}
           <FormField label="Notes" className="md:col-span-2">
             <textarea name="notes" rows={4} className={inputClassName} placeholder="Mention dietary labels, first-come rules, or packing instructions." />
           </FormField>

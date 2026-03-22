@@ -26,8 +26,8 @@ export function OnboardingPage() {
       name: String(form.get('name')),
       phone: String(form.get('phone') ?? ''),
       locationText: String(form.get('locationText')),
-      lat: Number(form.get('lat')),
-      lng: Number(form.get('lng')),
+      lat: currentProfile.lat,
+      lng: currentProfile.lng,
     });
     await refreshSession();
     setSubmitting(false);
@@ -73,14 +73,13 @@ export function OnboardingPage() {
             <FormField label="Phone (optional)">
               <input name="phone" defaultValue={currentProfile.phone ?? ''} className={inputClassName} />
             </FormField>
-            <FormField label="Approximate location" className="md:col-span-2">
-              <input name="locationText" defaultValue={currentProfile.locationText} className={inputClassName} required />
-            </FormField>
-            <FormField label="Latitude">
-              <input name="lat" type="number" step="0.0001" defaultValue={currentProfile.lat} className={inputClassName} required />
-            </FormField>
-            <FormField label="Longitude">
-              <input name="lng" type="number" step="0.0001" defaultValue={currentProfile.lng} className={inputClassName} required />
+            <FormField label="Approximate location" className="md:col-span-2" hint="Country, State, City/Town">
+              <input
+                name="locationText"
+                defaultValue={currentProfile.locationText}
+                className={inputClassName}
+                required
+              />
             </FormField>
             <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
               Save Profile

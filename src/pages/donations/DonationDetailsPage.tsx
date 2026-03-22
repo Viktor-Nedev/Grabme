@@ -4,6 +4,7 @@ import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
+import { useAuth } from '@/hooks/useAuth';
 import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { buildNavigationUrl } from '@/utils/map';
 import { formatDateTime } from '@/utils/formatters';
@@ -11,11 +12,17 @@ import { formatDateTime } from '@/utils/formatters';
 export function DonationDetailsPage() {
   const { id } = useParams();
   const protectedNavigate = useProtectedNavigation();
-  const { donations, organizations } = useAppData();
+  const { donations, organizations, profiles } = useAppData();
+  const { currentProfile } = useAuth();
   const donation = donations.find((entry) => entry.id === id);
   const organization = organizations.find((entry) => entry.id === donation?.organizationId);
+  const donorProfile = profiles.find((entry) => entry.id === donation?.profileId);
+  const isOwner =
+    currentProfile &&
+    ((donation?.profileId && donation.profileId === currentProfile.id) ||
+      (organization && organization.profileId === currentProfile.id));
 
-  if (!donation || !organization) {
+  if (!donation) {
     return null;
   }
 
@@ -23,7 +30,7 @@ export function DonationDetailsPage() {
     <section className="section-shell py-10">
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="surface-card p-8">
-          <RoleBadge role="organization" verified={organization.verified} />
+          <RoleBadge role={organization ? 'organization' : 'user'} verified={organization?.verified} />
           <SectionHeading
             eyebrow={donation.category}
             title={donation.title}
@@ -54,7 +61,9 @@ export function DonationDetailsPage() {
             <div className="surface-muted p-4 md:col-span-2">
               <p className="text-sm text-brand-gray">Pickup location</p>
               <p className="mt-2 font-semibold">{donation.pickupAddress}</p>
-              <p className="mt-2 text-sm text-brand-gray">{organization.organizationName}</p>
+              <p className="mt-2 text-sm text-brand-gray">
+                {organization?.organizationName ?? donorProfile?.name ?? 'Community donor'}
+              </p>
             </div>
           </div>
         </div>
@@ -72,7 +81,7 @@ export function DonationDetailsPage() {
                   locationText: donation.pickupAddress,
                   color: 'yellow',
                   detailRoute: `/donations/${donation.id}`,
-                  navigationLabel: organization.organizationName,
+                  navigationLabel: organization?.organizationName ?? donorProfile?.name ?? 'Community donor',
                   meta: 'Available donation',
                   lat: donation.lat,
                   lng: donation.lng,
@@ -97,14 +106,28 @@ export function DonationDetailsPage() {
                 <PackageOpen className="size-4" />
                 Claim Pickup
               </button>
+              {isOwner ? (
+                <Link to={`/donations/${donation.id}/edit`} className="btn-ghost">
+                  Edit
+                </Link>
+              ) : null}
             </div>
           </div>
 
           <div className="surface-card p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-gray">Organization</p>
-            <h3 className="mt-3 font-display text-2xl">{organization.organizationName}</h3>
-            <p className="mt-2 text-sm text-brand-gray">{organization.organizationType}</p>
-            <p className="mt-4 text-sm text-brand-gray">{organization.operatingHours}</p>
+            {organization ? (
+              <>
+                <h3 className="mt-3 font-display text-2xl">{organization.organizationName}</h3>
+                <p className="mt-2 text-sm text-brand-gray">{organization.organizationType}</p>
+                <p className="mt-4 text-sm text-brand-gray">{organization.operatingHours}</p>
+              </>
+            ) : (
+              <>
+                <h3 className="mt-3 font-display text-2xl">{donorProfile?.name ?? 'Community donor'}</h3>
+                <p className="mt-2 text-sm text-brand-gray">Individual contributor</p>
+              </>
+            )}
           </div>
         </div>
       </div>

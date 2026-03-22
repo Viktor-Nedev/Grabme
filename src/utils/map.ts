@@ -14,7 +14,7 @@ export function projectToMap(
   };
 }
 
-function donationMarker(donation: Donation, organization?: Organization): MapMarker {
+function donationMarker(donation: Donation, organization?: Organization, profile?: Profile): MapMarker {
   const expiring = isExpiringSoon(donation.expiryDate);
   return {
     id: `marker-${donation.id}`,
@@ -25,7 +25,7 @@ function donationMarker(donation: Donation, organization?: Organization): MapMar
     locationText: donation.pickupAddress,
     color: expiring ? 'red' : 'yellow',
     detailRoute: `/donations/${donation.id}`,
-    navigationLabel: organization?.organizationName ?? 'Pickup point',
+    navigationLabel: organization?.organizationName ?? profile?.name ?? 'Pickup point',
     meta: expiring ? 'Expiring soon' : 'Donation available',
     lat: donation.lat,
     lng: donation.lng,
@@ -90,6 +90,7 @@ export function buildMapMarkers(data: AppDataset, currentProfile?: Profile | nul
       donationMarker(
         donation,
         data.organizations.find((organization) => organization.id === donation.organizationId),
+        data.profiles.find((profile) => profile.id === donation.profileId),
       ),
     );
 

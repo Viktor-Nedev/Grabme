@@ -25,8 +25,19 @@ interface AppDataContextValue extends AppDataset {
   refreshAll: () => Promise<void>;
   completeUserOnboarding: (profileId: string, input: UserOnboardingInput) => Promise<Profile | null>;
   completeOrganizationOnboarding: (profileId: string, input: OrganizationOnboardingInput) => Promise<Organization | null>;
-  addDonation: (organizationId: string, input: NewDonationInput & { imageFile?: File | null }) => Promise<Donation>;
+  addDonation: (
+    owner: { organizationId?: string | null; profileId?: string | null },
+    input: NewDonationInput & { imageFile?: File | null },
+  ) => Promise<Donation>;
+  updateDonation: (
+    donationId: string,
+    input: NewDonationInput & { imageFile?: File | null },
+  ) => Promise<Donation>;
   addRequest: (profileId: string, input: NewRequestInput & { imageFile?: File | null }) => Promise<FoodRequest>;
+  updateRequest: (
+    requestId: string,
+    input: NewRequestInput & { imageFile?: File | null },
+  ) => Promise<FoodRequest>;
   addEvent: (organizationId: string, input: NewEventInput & { imageFile?: File | null }) => Promise<Event>;
   addComment: (profileId: string, input: NewCommentInput) => Promise<RequestComment>;
 }
@@ -258,14 +269,15 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return mappedOrg;
   };
 
-  const addDonation: AppDataContextValue['addDonation'] = async (organizationId, input) => {
+  const addDonation: AppDataContextValue['addDonation'] = async (owner, input) => {
     if (!supabase) throw new Error('Supabase not configured');
     const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'donations') : null;
 
     const { data: row, error: insertError } = await supabase
       .from('donations')
       .insert({
-        organization_id: organizationId,
+        organization_id: owner.organizationId ?? null,
+        profile_id: owner.profileId ?? null,
         title: input.title,
         description: input.description,
         category: input.category,
@@ -293,6 +305,47 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       ...current,
       donations: [donation, ...current.donations],
       aiInsights: buildInsights([donation, ...current.donations], current.requests),
+    }));
+    return donation;
+  };
+
+  const updateDonation: AppDataContextValue['updateDonation'] = async (donationId, input) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'donations') : input.imageUrl ?? null;
+
+    const { data: row, error: updateError } = await supabase
+      .from('donations')
+      .update({
+        title: input.title,
+        description: input.description,
+        category: input.category,
+        quantity: input.quantity,
+        expiry_date: input.expiryDate,
+        pickup_address: input.pickupAddress,
+        lat: input.lat,
+        lng: input.lng,
+        available_from: input.availableFrom,
+        available_until: input.availableUntil,
+        storage_type: input.storageType,
+        notes: input.notes,
+        image_url: imageUrl,
+      })
+      .eq('id', donationId)
+      .select('*')
+      .single();
+
+    if (updateError || !row) {
+      throw updateError ?? new Error('Failed to update donation');
+    }
+
+    const donation = mapDonation(row);
+    setData((current) => ({
+      ...current,
+      donations: current.donations.map((entry) => (entry.id === donationId ? donation : entry)),
+      aiInsights: buildInsights(
+        current.donations.map((entry) => (entry.id === donationId ? donation : entry)),
+        current.requests,
+      ),
     }));
     return donation;
   };
@@ -329,6 +382,41 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       ...current,
       requests: [request, ...current.requests],
       aiInsights: buildInsights(current.donations, [request, ...current.requests]),
+    }));
+    return request;
+  };
+
+  const updateRequest: AppDataContextValue['updateRequest'] = async (requestId, input) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const imageUrl = input.imageFile ? await uploadImage(input.imageFile, 'requests') : input.imageUrl ?? null;
+
+    const { data: row, error: updateError } = await supabase
+      .from('requests')
+      .update({
+        title: input.title,
+        description: input.description,
+        comment: input.comment,
+        people_count: input.peopleCount,
+        urgency: input.urgency,
+        food_type: input.foodType,
+        location_text: input.locationText,
+        lat: input.lat,
+        lng: input.lng,
+        image_url: imageUrl,
+      })
+      .eq('id', requestId)
+      .select('*')
+      .single();
+
+    if (updateError || !row) {
+      throw updateError ?? new Error('Failed to update request');
+    }
+
+    const request = mapRequest(row);
+    setData((current) => ({
+      ...current,
+      requests: current.requests.map((entry) => (entry.id === requestId ? request : entry)),
+      aiInsights: buildInsights(current.donations, current.requests.map((entry) => (entry.id === requestId ? request : entry))),
     }));
     return request;
   };
@@ -402,7 +490,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         completeUserOnboarding,
         completeOrganizationOnboarding,
         addDonation,
+        updateDonation,
         addRequest,
+        updateRequest,
         addEvent,
         addComment,
       }}

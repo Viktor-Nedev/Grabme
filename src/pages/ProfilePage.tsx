@@ -1,15 +1,50 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { FormField, inputClassName } from '@/components/forms/FormField';
 
 export function ProfilePage() {
-  const { requests } = useAppData();
-  const { currentProfile, currentOrganization, logout } = useAuth();
+  const { requests, refreshAll } = useAppData();
+  const { currentProfile, currentOrganization, logout, refreshSession } = useAuth();
   const [supabaseStatus, setSupabaseStatus] = useState<'idle' | 'checking' | 'ok' | 'error'>('idle');
   const [supabaseMessage, setSupabaseMessage] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: currentProfile?.name ?? '',
+    phone: currentProfile?.phone ?? '',
+    locationText: currentProfile?.locationText ?? '',
+  });
+  const [orgForm, setOrgForm] = useState({
+    organizationName: currentOrganization?.organizationName ?? '',
+    address: currentOrganization?.address ?? '',
+    organizationType: currentOrganization?.organizationType ?? '',
+    operatingHours: currentOrganization?.operatingHours ?? '',
+    capacity: currentOrganization?.capacity ?? 0,
+  });
+
+  useEffect(() => {
+    if (!currentProfile) return;
+    setProfileForm({
+      name: currentProfile.name,
+      phone: currentProfile.phone ?? '',
+      locationText: currentProfile.locationText ?? '',
+    });
+  }, [currentProfile]);
+
+  useEffect(() => {
+    if (!currentOrganization) return;
+    setOrgForm({
+      organizationName: currentOrganization.organizationName,
+      address: currentOrganization.address,
+      organizationType: currentOrganization.organizationType,
+      operatingHours: currentOrganization.operatingHours ?? '',
+      capacity: currentOrganization.capacity ?? 0,
+    });
+  }, [currentOrganization]);
 
   if (!currentProfile) {
     return null;
@@ -59,6 +94,121 @@ export function ProfilePage() {
             </div>
           )}
         </div>
+
+        <div className="mt-8">
+          <button type="button" className="btn-ghost" onClick={() => setEditing((value) => !value)}>
+            {editing ? 'Close editor' : 'Edit profile'}
+          </button>
+        </div>
+
+        {editing ? (
+          <form
+            className="mt-6 grid gap-5 md:grid-cols-2"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              if (!supabase) return;
+              setSaving(true);
+              await supabase
+                .from('profiles')
+                .update({
+                  name: profileForm.name,
+                  phone: profileForm.phone || null,
+                  location_text: profileForm.locationText,
+                })
+                .eq('id', currentProfile.id);
+
+              if (currentProfile.role === 'organization' && currentOrganization) {
+                await supabase
+                  .from('organizations')
+                  .update({
+                    organization_name: orgForm.organizationName,
+                    address: orgForm.address,
+                    organization_type: orgForm.organizationType,
+                    operating_hours: orgForm.operatingHours,
+                    capacity: Number(orgForm.capacity),
+                  })
+                  .eq('id', currentOrganization.id);
+              }
+
+              await refreshSession();
+              await refreshAll();
+              setSaving(false);
+              setEditing(false);
+            }}
+          >
+            <FormField label="Name">
+              <input
+                className={inputClassName}
+                value={profileForm.name}
+                onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
+                required
+              />
+            </FormField>
+            <FormField label="Phone">
+              <input
+                className={inputClassName}
+                value={profileForm.phone}
+                onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))}
+              />
+            </FormField>
+            <FormField label="Approximate location" hint="Country, State, City/Town" className="md:col-span-2">
+              <input
+                className={inputClassName}
+                value={profileForm.locationText}
+                onChange={(event) => setProfileForm((current) => ({ ...current, locationText: event.target.value }))}
+                required
+              />
+            </FormField>
+
+            {currentProfile.role === 'organization' ? (
+              <>
+                <FormField label="Organization name">
+                  <input
+                    className={inputClassName}
+                    value={orgForm.organizationName}
+                    onChange={(event) => setOrgForm((current) => ({ ...current, organizationName: event.target.value }))}
+                    required
+                  />
+                </FormField>
+                <FormField label="Address">
+                  <input
+                    className={inputClassName}
+                    value={orgForm.address}
+                    onChange={(event) => setOrgForm((current) => ({ ...current, address: event.target.value }))}
+                    required
+                  />
+                </FormField>
+                <FormField label="Organization type">
+                  <input
+                    className={inputClassName}
+                    value={orgForm.organizationType}
+                    onChange={(event) => setOrgForm((current) => ({ ...current, organizationType: event.target.value }))}
+                    required
+                  />
+                </FormField>
+                <FormField label="Operating hours">
+                  <input
+                    className={inputClassName}
+                    value={orgForm.operatingHours}
+                    onChange={(event) => setOrgForm((current) => ({ ...current, operatingHours: event.target.value }))}
+                  />
+                </FormField>
+                <FormField label="Capacity">
+                  <input
+                    type="number"
+                    className={inputClassName}
+                    value={orgForm.capacity}
+                    onChange={(event) => setOrgForm((current) => ({ ...current, capacity: Number(event.target.value) }))}
+                  />
+                </FormField>
+              </>
+            ) : null}
+
+            <button type="submit" className="btn-primary md:col-span-2" disabled={saving}>
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+          </form>
+        ) : null}
         <div className="mt-8 surface-muted p-5">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-gray">Supabase Status</p>
           <p className="mt-3 text-sm text-brand-gray">

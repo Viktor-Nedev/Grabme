@@ -6,6 +6,7 @@ import type {
   Profile,
   RequestComment,
 } from '@/types';
+import { DEFAULT_COORDS } from '@/utils/constants';
 
 export function mapProfile(row: any): Profile {
   return {
@@ -16,8 +17,8 @@ export function mapProfile(row: any): Profile {
     phone: row.phone ?? undefined,
     avatarUrl: row.avatar_url ?? undefined,
     locationText: row.location_text ?? '',
-    lat: row.lat ?? 0,
-    lng: row.lng ?? 0,
+    lat: row.lat ?? DEFAULT_COORDS.lat,
+    lng: row.lng ?? DEFAULT_COORDS.lng,
     createdAt: row.created_at,
     onboardingComplete: Boolean(row.onboarding_complete),
   };
@@ -35,23 +36,24 @@ export function mapOrganization(row: any): Organization {
     foodTypes: row.food_types ?? [],
     verified: Boolean(row.verified),
     createdAt: row.created_at,
-    lat: row.lat ?? 0,
-    lng: row.lng ?? 0,
+    lat: row.lat ?? DEFAULT_COORDS.lat,
+    lng: row.lng ?? DEFAULT_COORDS.lng,
   };
 }
 
 export function mapDonation(row: any): Donation {
   return {
     id: row.id,
-    organizationId: row.organization_id,
+    organizationId: row.organization_id ?? null,
+    profileId: row.profile_id ?? null,
     title: row.title,
     description: row.description,
     category: row.category,
     quantity: row.quantity,
     expiryDate: row.expiry_date,
     pickupAddress: row.pickup_address,
-    lat: row.lat ?? 0,
-    lng: row.lng ?? 0,
+    lat: row.lat ?? DEFAULT_COORDS.lat,
+    lng: row.lng ?? DEFAULT_COORDS.lng,
     status: row.status,
     createdAt: row.created_at,
     availableFrom: row.available_from ?? row.created_at,
@@ -73,8 +75,8 @@ export function mapRequest(row: any): FoodRequest {
     urgency: row.urgency,
     foodType: row.food_type,
     locationText: row.location_text ?? '',
-    lat: row.lat ?? 0,
-    lng: row.lng ?? 0,
+    lat: row.lat ?? DEFAULT_COORDS.lat,
+    lng: row.lng ?? DEFAULT_COORDS.lng,
     status: row.status,
     createdAt: row.created_at,
     imageUrl: row.image_url ?? undefined,
@@ -89,8 +91,8 @@ export function mapEvent(row: any): Event {
     description: row.description,
     eventDate: row.event_date,
     address: row.address,
-    lat: row.lat ?? 0,
-    lng: row.lng ?? 0,
+    lat: row.lat ?? DEFAULT_COORDS.lat,
+    lng: row.lng ?? DEFAULT_COORDS.lng,
     foodType: row.food_type,
     capacity: row.capacity ?? 0,
     notes: row.notes ?? '',

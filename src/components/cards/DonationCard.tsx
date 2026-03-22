@@ -7,9 +7,10 @@ import { formatDateTime } from '@/utils/formatters';
 interface DonationCardProps {
   donation: Donation;
   organizationName?: string;
+  donorName?: string;
 }
 
-export function DonationCard({ donation, organizationName }: DonationCardProps) {
+export function DonationCard({ donation, organizationName, donorName }: DonationCardProps) {
   return (
     <motion.article
       whileHover={{ y: -6 }}
@@ -41,7 +42,7 @@ export function DonationCard({ donation, organizationName }: DonationCardProps) 
         </div>
       </div>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-brand-ink/8 pt-4">
-        <p className="text-sm font-medium text-brand-gray">{organizationName ?? 'Community partner'}</p>
+        <p className="text-sm font-medium text-brand-gray">{organizationName ?? donorName ?? 'Community donor'}</p>
         <div className="flex gap-2">
           <Link to={`/donations/${donation.id}`} className="btn-ghost px-4 py-2 text-sm">
             View Details

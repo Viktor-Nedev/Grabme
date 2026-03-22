@@ -6,12 +6,14 @@ import { SearchBar } from '@/components/common/SearchBar';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
+import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { FOOD_CATEGORIES } from '@/utils/constants';
 import { formatDistanceKm, isExpiringSoon } from '@/utils/formatters';
 
 export function DonationFeedPage() {
-  const { donations, organizations } = useAppData();
+  const { donations, organizations, profiles } = useAppData();
   const { currentProfile } = useAuth();
+  const protectedNavigate = useProtectedNavigation();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [organizationId, setOrganizationId] = useState('all');
@@ -51,6 +53,11 @@ export function DonationFeedPage() {
         eyebrow="Donation Feed"
         title="Available food donations across the network"
         description="Filter by food type, expiry pressure, nearest pickups, or organization to find the right distribution opportunity."
+        action={
+          <button type="button" className="btn-primary" onClick={() => protectedNavigate('/donations/new')}>
+            Donate Food
+          </button>
+        }
       />
 
       <div className="mt-8 grid gap-4 xl:grid-cols-[0.34fr_0.66fr]">
@@ -98,6 +105,7 @@ export function DonationFeedPage() {
                 key={donation.id}
                 donation={donation}
                 organizationName={organizations.find((organization) => organization.id === donation.organizationId)?.organizationName}
+                donorName={profiles.find((profile) => profile.id === donation.profileId)?.name}
               />
             ))}
           </div>

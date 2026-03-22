@@ -81,6 +81,7 @@ export function UserDashboardPage() {
                 key={donation.id}
                 donation={donation}
                 organizationName={organizations.find((organization) => organization.id === donation.organizationId)?.organizationName}
+                donorName={profiles.find((profile) => profile.id === donation.profileId)?.name}
               />
             ))}
           </div>

@@ -34,7 +34,8 @@ create table if not exists public.organizations (
 
 create table if not exists public.donations (
   id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references public.organizations(id) on delete cascade,
+  organization_id uuid references public.organizations(id) on delete set null,
+  profile_id uuid references public.profiles(id) on delete set null,
   title text not null,
   description text not null,
   category text not null,
@@ -118,21 +119,24 @@ create policy "organizations_update_owner" on public.organizations
 create policy "donations_select_all" on public.donations for select using (true);
 create policy "donations_insert_owner" on public.donations
   for insert with check (
-    exists (
+    (profile_id = auth.uid())
+    or exists (
       select 1 from public.organizations o
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
 create policy "donations_update_owner" on public.donations
   for update using (
-    exists (
+    (profile_id = auth.uid())
+    or exists (
       select 1 from public.organizations o
       where o.id = organization_id and o.profile_id = auth.uid()
     )
   );
 create policy "donations_delete_owner" on public.donations
   for delete using (
-    exists (
+    (profile_id = auth.uid())
+    or exists (
       select 1 from public.organizations o
       where o.id = organization_id and o.profile_id = auth.uid()
     )

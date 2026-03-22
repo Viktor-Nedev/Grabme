@@ -6,12 +6,14 @@ import { SectionHeading } from '@/components/common/SectionHeading';
 import { RequestCard } from '@/components/cards/RequestCard';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
+import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { FOOD_CATEGORIES } from '@/utils/constants';
 import { formatDistanceKm, urgencyRank } from '@/utils/formatters';
 
 export function RequestsFeedPage() {
   const { requests, profiles } = useAppData();
   const { currentProfile } = useAuth();
+  const protectedNavigate = useProtectedNavigation();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'nearest' | 'urgent'>('urgent');
@@ -47,6 +49,11 @@ export function RequestsFeedPage() {
         eyebrow="Requests Feed"
         title="Active food requests from the community"
         description="Sort by urgency, distance, or freshness to find the needs that should be addressed first."
+        action={
+          <button type="button" className="btn-primary" onClick={() => protectedNavigate('/requests/new')}>
+            Create Request
+          </button>
+        }
       />
 
       <div className="mt-8 grid gap-4 xl:grid-cols-[0.34fr_0.66fr]">
