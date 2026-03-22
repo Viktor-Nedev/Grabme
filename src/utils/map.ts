@@ -116,3 +116,22 @@ export function buildNavigationUrl(locationText: string, lat: number, lng: numbe
   const query = encodeURIComponent(`${locationText} ${lat},${lng}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
+
+export function getMarkerIcon(marker: MapMarker) {
+  if (marker.type === 'user-location') {
+    return '/location.png';
+  }
+  if (marker.type === 'organization') {
+    return '/Organizations_and_pickup_hubs.png';
+  }
+  if (marker.type === 'event') {
+    return '/Events.png';
+  }
+  if (marker.type === 'donation') {
+    return marker.color === 'red' ? '/Urgent_requests_or_expiring_food.png' : '/Available_donations.png';
+  }
+  if (marker.type === 'request') {
+    return '/Urgent_requests_or_expiring_food.png';
+  }
+  return '/Available_donations.png';
+}

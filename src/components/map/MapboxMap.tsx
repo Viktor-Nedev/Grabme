@@ -3,6 +3,7 @@ import mapboxgl, { type Map as MapboxMapInstance, type Marker as MapboxMarker } 
 import type { MapMarker } from '@/types';
 import { cn } from '@/utils/cn';
 import { DEFAULT_COORDS } from '@/utils/constants';
+import { getMarkerIcon } from '@/utils/map';
 
 interface MapboxMapProps {
   markers: MapMarker[];
@@ -11,21 +12,6 @@ interface MapboxMapProps {
   className?: string;
   styleUrl?: string;
   focus?: { lat: number; lng: number; zoom?: number; key?: number };
-}
-
-function markerColor(color: MapMarker['color']) {
-  switch (color) {
-    case 'red':
-      return '#EF4444';
-    case 'yellow':
-      return '#FFC107';
-    case 'green':
-      return '#10B981';
-    case 'blue':
-      return '#38BDF8';
-    default:
-      return '#8B5CF6';
-  }
 }
 
 export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, focus }: MapboxMapProps) {
@@ -66,13 +52,30 @@ export function MapboxMap({ markers, selectedId, onSelect, className, styleUrl, 
     markers.forEach((marker) => {
       const el = document.createElement('button');
       el.type = 'button';
-      el.style.width = marker.id === selectedId ? '18px' : '14px';
-      el.style.height = marker.id === selectedId ? '18px' : '14px';
+      const isLocation = marker.type === 'user-location';
+      const size = isLocation
+        ? marker.id === selectedId
+          ? 44
+          : 36
+        : marker.id === selectedId
+          ? 64
+          : 52;
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
       el.style.borderRadius = '9999px';
-      el.style.background = markerColor(marker.color);
-      el.style.boxShadow = '0 10px 25px rgba(0,0,0,0.18)';
-      el.style.border = '3px solid rgba(255,255,255,0.9)';
+      el.style.background = 'transparent';
+      el.style.border = 'none';
       el.style.cursor = 'pointer';
+      el.style.padding = '0';
+
+      const img = document.createElement('img');
+      img.src = getMarkerIcon(marker);
+      img.alt = marker.title;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.style.filter = 'drop-shadow(0 10px 16px rgba(0,0,0,0.25))';
+      el.appendChild(img);
 
       el.addEventListener('click', () => {
         onSelect?.(marker);

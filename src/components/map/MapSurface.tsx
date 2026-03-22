@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_MAP_BOUNDS } from '@/utils/constants';
 import { cn } from '@/utils/cn';
-import { projectToMap } from '@/utils/map';
+import { getMarkerIcon, projectToMap } from '@/utils/map';
 import type { MapMarker } from '@/types';
 import { MarkerPopup } from '@/components/map/MarkerPopup';
 
@@ -12,21 +12,6 @@ interface MapSurfaceProps {
   onSelect?: (marker: MapMarker) => void;
   compact?: boolean;
   showPopup?: boolean;
-}
-
-function markerColor(color: MapMarker['color']) {
-  switch (color) {
-    case 'red':
-      return 'bg-red-500 ring-red-200';
-    case 'yellow':
-      return 'bg-brand-yellow ring-brand-yellow/40';
-    case 'green':
-      return 'bg-emerald-500 ring-emerald-200';
-    case 'blue':
-      return 'bg-sky-500 ring-sky-200';
-    default:
-      return 'bg-violet-500 ring-violet-200';
-  }
 }
 
 export function MapSurface({
@@ -81,15 +66,15 @@ export function MapSurface({
             style={{ left: `${position.x}%`, top: `${position.y}%` }}
             aria-label={marker.title}
           >
-            <span
+            <img
+              src={getMarkerIcon(marker)}
+              alt={marker.title}
               className={cn(
-                'relative flex size-4 rounded-full ring-8 shadow-lg',
-                markerColor(marker.color),
-                isActive && 'size-5',
+                'object-contain drop-shadow-md',
+                marker.type === 'user-location' ? 'size-9' : 'size-14',
+                isActive && (marker.type === 'user-location' ? 'size-11' : 'size-16'),
               )}
-            >
-              <span className="absolute inset-0 animate-ping rounded-full bg-current opacity-30" />
-            </span>
+            />
           </button>
         );
       })}

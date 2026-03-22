@@ -1,9 +1,9 @@
 const items = [
-  { label: 'Urgent requests or expiring food', color: 'bg-red-500' },
-  { label: 'Available donations', color: 'bg-brand-yellow' },
-  { label: 'Organizations and pickup hubs', color: 'bg-emerald-500' },
-  { label: 'Your saved location', color: 'bg-sky-500' },
-  { label: 'Events', color: 'bg-violet-500' },
+  { label: 'Urgent requests or expiring food', icon: '/Urgent_requests_or_expiring_food.png' },
+  { label: 'Available donations', icon: '/Available_donations.png' },
+  { label: 'Organizations and pickup hubs', icon: '/Organizations_and_pickup_hubs.png' },
+  { label: 'Your location', icon: '/location.png' },
+  { label: 'Events', icon: '/Events.png' },
 ];
 
 export function MapLegend() {
@@ -11,7 +11,7 @@ export function MapLegend() {
     <div className="surface-card flex flex-wrap gap-3 p-4">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-2 text-sm text-brand-gray">
-          <span className={`size-3 rounded-full ${item.color}`} />
+          <img src={item.icon} alt="" className="size-7 object-contain" />
           {item.label}
         </div>
       ))}
