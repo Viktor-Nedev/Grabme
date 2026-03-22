@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormField, inputClassName } from '@/components/forms/FormField';
 import { SectionHeading } from '@/components/common/SectionHeading';
@@ -9,15 +10,17 @@ export function CreateEventPage() {
   const navigate = useNavigate();
   const { addEvent } = useAppData();
   const { currentOrganization } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
 
   if (!currentOrganization) {
     return null;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const createdEvent = addEvent(currentOrganization.id, {
+    setSubmitting(true);
+    const createdEvent = await addEvent(currentOrganization.id, {
       title: String(form.get('title')),
       description: String(form.get('description')),
       eventDate: new Date(`${String(form.get('date'))}T${String(form.get('time'))}:00`).toISOString(),
@@ -27,8 +30,9 @@ export function CreateEventPage() {
       foodType: form.get('foodType') as (typeof FOOD_CATEGORIES)[number],
       capacity: Number(form.get('capacity')),
       notes: String(form.get('notes')),
+      imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
     });
-
+    setSubmitting(false);
     navigate(`/events/${createdEvent.id}`);
   };
 
@@ -77,7 +81,10 @@ export function CreateEventPage() {
           <FormField label="Notes" className="md:col-span-2">
             <textarea name="notes" rows={4} className={inputClassName} placeholder="Accessibility notes, registration guidance, or volunteer needs." />
           </FormField>
-          <button type="submit" className="btn-primary md:col-span-2">
+          <FormField label="Event image" className="md:col-span-2">
+            <input type="file" name="image" accept="image/*" className={inputClassName} />
+          </FormField>
+          <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
             Publish Event
           </button>
         </form>

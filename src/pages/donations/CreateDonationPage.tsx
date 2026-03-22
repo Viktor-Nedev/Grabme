@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormField, inputClassName } from '@/components/forms/FormField';
 import { SectionHeading } from '@/components/common/SectionHeading';
@@ -9,15 +10,17 @@ export function CreateDonationPage() {
   const navigate = useNavigate();
   const { addDonation } = useAppData();
   const { currentOrganization } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
 
   if (!currentOrganization) {
     return null;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const donation = addDonation(currentOrganization.id, {
+    setSubmitting(true);
+    const donation = await addDonation(currentOrganization.id, {
       title: String(form.get('title')),
       description: String(form.get('description')),
       category: form.get('category') as (typeof FOOD_CATEGORIES)[number],
@@ -31,8 +34,9 @@ export function CreateDonationPage() {
       storageType: String(form.get('storageType')),
       notes: String(form.get('notes')),
       imageUrl: '',
+      imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
     });
-
+    setSubmitting(false);
     navigate(`/donations/${donation.id}`);
   };
 
@@ -96,10 +100,10 @@ export function CreateDonationPage() {
           <FormField label="Notes" className="md:col-span-2">
             <textarea name="notes" rows={4} className={inputClassName} placeholder="Mention dietary labels, first-come rules, or packing instructions." />
           </FormField>
-          <div className="md:col-span-2 rounded-[24px] border border-dashed border-brand-ink/12 bg-brand-cream/40 p-5 text-sm text-brand-gray">
-            Image upload placeholder: connect this field to Supabase Storage later for donation photos.
-          </div>
-          <button type="submit" className="btn-primary md:col-span-2">
+          <FormField label="Donation image" className="md:col-span-2">
+            <input type="file" name="image" accept="image/*" className={inputClassName} />
+          </FormField>
+          <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
             Publish Donation
           </button>
         </form>

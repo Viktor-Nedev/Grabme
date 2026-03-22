@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, Settings, UserRound, X } from 'lucide-react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/utils/constants';
 import { cn } from '@/utils/cn';
@@ -13,18 +13,11 @@ const publicLinks = [
 ];
 
 export function Navbar() {
-  const navigate = useNavigate();
-  const { currentProfile, isAuthenticated, loginAsDemo } = useAuth();
+  const { currentProfile, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const dashboardRoute =
     currentProfile?.role === 'organization' ? ROUTES.orgDashboard : ROUTES.userDashboard;
-
-  const handleDemoLogin = (role: 'user' | 'organization') => {
-    const result = loginAsDemo(role);
-    navigate(result.redirectTo);
-    setMobileOpen(false);
-  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/60 bg-white/80 backdrop-blur-xl">
@@ -80,21 +73,9 @@ export function Navbar() {
               </Link>
             </>
           ) : (
-            <>
-              <button type="button" onClick={() => handleDemoLogin('user')} className="btn-ghost px-4 py-2 text-sm">
-                Demo User
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('organization')}
-                className="btn-secondary px-4 py-2 text-sm"
-              >
-                Demo Org
-              </button>
-              <Link to={ROUTES.auth} className="btn-primary px-4 py-2 text-sm">
-                Login
-              </Link>
-            </>
+            <Link to={ROUTES.auth} className="btn-primary px-4 py-2 text-sm">
+              Login
+            </Link>
           )}
         </div>
 
@@ -126,22 +107,17 @@ export function Navbar() {
                 <Link to={dashboardRoute} onClick={() => setMobileOpen(false)} className="btn-ghost text-sm">
                   Dashboard
                 </Link>
-                <button type="button" onClick={logout} className="btn-primary text-sm">
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <button type="button" onClick={() => handleDemoLogin('user')} className="btn-ghost text-sm">
-                  Demo User
-                </button>
-                <button type="button" onClick={() => handleDemoLogin('organization')} className="btn-secondary text-sm">
-                  Demo Org
-                </button>
-                <Link to={ROUTES.auth} onClick={() => setMobileOpen(false)} className="btn-primary text-sm">
-                  Login
+                <Link to={ROUTES.profile} onClick={() => setMobileOpen(false)} className="btn-ghost text-sm">
+                  Profile
+                </Link>
+                <Link to={ROUTES.settings} onClick={() => setMobileOpen(false)} className="btn-ghost text-sm">
+                  Settings
                 </Link>
               </>
+            ) : (
+              <Link to={ROUTES.auth} onClick={() => setMobileOpen(false)} className="btn-primary text-sm">
+                Login
+              </Link>
             )}
           </div>
         </div>

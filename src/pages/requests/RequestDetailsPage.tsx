@@ -24,13 +24,13 @@ export function RequestDetailsPage() {
     return null;
   }
 
-  const handleCommentSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCommentSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!currentProfile || !comment.trim()) {
       return;
     }
 
-    addComment(currentProfile.id, {
+    await addComment(currentProfile.id, {
       requestId: request.id,
       content: comment.trim(),
     });

@@ -11,15 +11,17 @@ export function CreateRequestPage() {
   const { addRequest } = useAppData();
   const { currentProfile } = useAuth();
   const [shareLocation, setShareLocation] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!currentProfile) {
     return null;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const request = addRequest(currentProfile.id, {
+    setSubmitting(true);
+    const request = await addRequest(currentProfile.id, {
       title: String(form.get('title')),
       description: String(form.get('description')),
       comment: String(form.get('comment')),
@@ -30,8 +32,9 @@ export function CreateRequestPage() {
       lat: shareLocation ? currentProfile.lat : Number(form.get('lat')),
       lng: shareLocation ? currentProfile.lng : Number(form.get('lng')),
       imageUrl: '',
+      imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
     });
-
+    setSubmitting(false);
     navigate(`/requests/${request.id}`);
   };
 
@@ -90,10 +93,10 @@ export function CreateRequestPage() {
               </FormField>
             </>
           ) : null}
-          <div className="md:col-span-2 rounded-[24px] border border-dashed border-brand-ink/12 bg-brand-cream/40 p-5 text-sm text-brand-gray">
-            Optional image placeholder: connect to Supabase Storage later for request support photos.
-          </div>
-          <button type="submit" className="btn-primary md:col-span-2">
+          <FormField label="Request image" className="md:col-span-2">
+            <input type="file" name="image" accept="image/*" className={inputClassName} />
+          </FormField>
+          <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
             Publish Request
           </button>
         </form>

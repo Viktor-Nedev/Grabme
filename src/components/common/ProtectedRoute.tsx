@@ -5,7 +5,11 @@ import { ROUTES } from '@/utils/constants';
 
 export function ProtectedRoute({ allowBeforeOnboarding = false }: { allowBeforeOnboarding?: boolean }) {
   const location = useLocation();
-  const { currentProfile, isAuthenticated } = useAuth();
+  const { currentProfile, isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     const redirect = encodeURIComponent(`${location.pathname}${location.search}`);

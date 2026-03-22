@@ -12,16 +12,20 @@ export function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect');
-  const { login, register, loginAsDemo } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [role, setRole] = useState<UserRole>('user');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('maya@grabme.app');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const result = mode === 'login' ? login({ email, role }) : register({ name, email, role });
+    const result =
+      mode === 'login'
+        ? await login({ email, role, password })
+        : await register({ name, email, role, password });
 
     if (!result.success) {
       setMessage(result.message ?? 'Something went wrong.');
@@ -29,11 +33,6 @@ export function AuthPage() {
     }
 
     navigate(redirect && result.redirectTo !== '/onboarding' ? redirect : result.redirectTo);
-  };
-
-  const handleDemo = (demoRole: UserRole) => {
-    const result = loginAsDemo(demoRole);
-    navigate(redirect ?? result.redirectTo);
   };
 
   return (
@@ -89,7 +88,6 @@ export function AuthPage() {
                 type="button"
                 onClick={() => {
                   setRole(option.value);
-                  setEmail(option.value === 'user' ? 'maya@grabme.app' : 'hope@grabme.org');
                 }}
                 className={`rounded-[22px] border p-4 text-left transition ${
                   role === option.value ? 'border-brand-red bg-brand-red/5' : 'border-brand-ink/8 bg-white'
@@ -127,6 +125,16 @@ export function AuthPage() {
                 required
               />
             </FormField>
+            <FormField label="Password">
+              <input
+                type="password"
+                className={inputClassName}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Minimum 6 characters"
+                required
+              />
+            </FormField>
 
             <button type="submit" className="btn-primary w-full">
               {mode === 'login' ? 'Login to Grabme' : 'Create Account'}
@@ -134,13 +142,8 @@ export function AuthPage() {
             </button>
           </form>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            <button type="button" onClick={() => handleDemo('user')} className="btn-ghost text-sm">
-              Continue as Demo User
-            </button>
-            <button type="button" onClick={() => handleDemo('organization')} className="btn-secondary text-sm">
-              Continue as Demo Org
-            </button>
+          <div className="mt-6 rounded-[20px] border border-brand-ink/8 bg-brand-cream/50 p-4 text-sm text-brand-gray">
+            Demo logins are disabled because authentication is now fully backed by Supabase.
           </div>
         </div>
       </div>

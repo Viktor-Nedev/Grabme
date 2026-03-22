@@ -11,31 +11,35 @@ export function OnboardingPage() {
   const { currentProfile, currentOrganization, refreshSession } = useAuth();
   const { completeOrganizationOnboarding, completeUserOnboarding } = useAppData();
   const [selectedFoodTypes, setSelectedFoodTypes] = useState<FoodCategory[]>(currentOrganization?.foodTypes ?? []);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!currentProfile) {
     return null;
   }
 
-  const handleUserSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleUserSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
-    completeUserOnboarding(currentProfile.id, {
+    setSubmitting(true);
+    await completeUserOnboarding(currentProfile.id, {
       name: String(form.get('name')),
       phone: String(form.get('phone') ?? ''),
       locationText: String(form.get('locationText')),
       lat: Number(form.get('lat')),
       lng: Number(form.get('lng')),
     });
-    refreshSession();
+    await refreshSession();
+    setSubmitting(false);
     navigate(ROUTES.userDashboard);
   };
 
-  const handleOrganizationSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleOrganizationSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
-    completeOrganizationOnboarding(currentProfile.id, {
+    setSubmitting(true);
+    await completeOrganizationOnboarding(currentProfile.id, {
       organizationName: String(form.get('organizationName')),
       address: String(form.get('address')),
       organizationType: String(form.get('organizationType')),
@@ -45,7 +49,8 @@ export function OnboardingPage() {
       lat: Number(form.get('lat')),
       lng: Number(form.get('lng')),
     });
-    refreshSession();
+    await refreshSession();
+    setSubmitting(false);
     navigate(ROUTES.orgDashboard);
   };
 
@@ -77,7 +82,7 @@ export function OnboardingPage() {
             <FormField label="Longitude">
               <input name="lng" type="number" step="0.0001" defaultValue={currentProfile.lng} className={inputClassName} required />
             </FormField>
-            <button type="submit" className="btn-primary md:col-span-2">
+            <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
               Save Profile
             </button>
           </form>
@@ -151,7 +156,7 @@ export function OnboardingPage() {
                 })}
               </div>
             </div>
-            <button type="submit" className="btn-primary md:col-span-2">
+            <button type="submit" className="btn-primary md:col-span-2" disabled={submitting}>
               Save Organization Profile
             </button>
           </form>

@@ -290,7 +290,9 @@ export function MapPage() {
               <Sparkles className="size-4 text-brand-red" />
               <p className="font-semibold">Operational insight</p>
             </div>
-            <p className="mt-3 text-sm text-brand-gray">{aiInsights.smartRecommendations[0]}</p>
+            <p className="mt-3 text-sm text-brand-gray">
+              {aiInsights.smartRecommendations[0] ?? 'No AI insights yet. Add requests or donations to generate signals.'}
+            </p>
             <div className="mt-4 flex items-center gap-2 text-sm text-brand-gray">
               <Clock3 className="size-4 text-brand-red" />
               Refreshed from the same live state as feeds and dashboards.

@@ -5,6 +5,7 @@ import { DonationCard } from '@/components/cards/DonationCard';
 import { EventCard } from '@/components/cards/EventCard';
 import { RequestCard } from '@/components/cards/RequestCard';
 import { SectionHeading } from '@/components/common/SectionHeading';
+import { EmptyState } from '@/components/common/EmptyState';
 import { StatsCard } from '@/components/common/StatsCard';
 import { useAppData } from '@/hooks/useAppData';
 import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
@@ -239,9 +240,21 @@ export function HomePage() {
           description="The feed cards below are pulled from the same state layer that powers details pages, dashboards, and the map."
         />
         <motion.div className="mt-8 grid gap-6 xl:grid-cols-3" variants={reveal}>
-          <DonationCard donation={donations[0]} organizationName="Hope Harvest Network" />
-          <RequestCard request={requests[0]} requesterName="Maya Johnson" />
-          <EventCard event={events[0]} organizerName="Hope Harvest Network" />
+          {donations[0] ? (
+            <DonationCard donation={donations[0]} organizationName="Partner organization" />
+          ) : (
+            <EmptyState title="No donations yet" description="Create the first donation to populate the live feed." />
+          )}
+          {requests[0] ? (
+            <RequestCard request={requests[0]} requesterName="Community member" />
+          ) : (
+            <EmptyState title="No requests yet" description="Create a request to make the map active." />
+          )}
+          {events[0] ? (
+            <EventCard event={events[0]} organizerName="Community organizer" />
+          ) : (
+            <EmptyState title="No events yet" description="Create an event to show upcoming distributions." />
+          )}
         </motion.div>
         <motion.div className="mt-8 flex flex-wrap gap-3" variants={reveal}>
           <Link to={ROUTES.map} className="btn-primary">
