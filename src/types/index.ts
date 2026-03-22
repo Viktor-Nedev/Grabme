@@ -4,6 +4,9 @@ export type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical';
 export type DonationStatus = 'active' | 'claimed' | 'expired';
 export type RequestStatus = 'active' | 'fulfilled' | 'closed';
 export type EventStatus = 'scheduled' | 'full' | 'completed';
+export type ConversationType = 'direct' | 'group';
+export type ConversationMemberRole = 'admin' | 'member';
+export type EventParticipantStatus = 'going';
 export type FoodCategory =
   | 'Meal Packs'
   | 'Fresh Produce'
@@ -92,6 +95,40 @@ export interface Event extends Coordinates {
   createdAt: string;
 }
 
+export interface Conversation {
+  id: string;
+  type: ConversationType;
+  title?: string;
+  eventId?: string | null;
+  createdByProfileId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationMember {
+  id: string;
+  conversationId: string;
+  profileId: string;
+  role: ConversationMemberRole;
+  joinedAt: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  profileId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface EventParticipant {
+  id: string;
+  eventId: string;
+  profileId: string;
+  status: EventParticipantStatus;
+  createdAt: string;
+}
+
 export interface RequestComment {
   id: string;
   requestId: string;
@@ -174,6 +211,10 @@ export interface AppDataset {
   requests: FoodRequest[];
   events: Event[];
   comments: RequestComment[];
+  conversations: Conversation[];
+  conversationMembers: ConversationMember[];
+  messages: Message[];
+  eventParticipants: EventParticipant[];
   aiInsights: AIInsightsData;
 }
 
@@ -240,9 +281,15 @@ export interface NewEventInput extends Coordinates {
   foodType: FoodCategory;
   capacity: number;
   notes: string;
+  createGroupChat?: boolean;
 }
 
 export interface NewCommentInput {
   requestId: string;
+  content: string;
+}
+
+export interface NewMessageInput {
+  conversationId: string;
   content: string;
 }

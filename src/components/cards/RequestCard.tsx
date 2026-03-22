@@ -45,6 +45,9 @@ export function RequestCard({ request, requesterName }: RequestCardProps) {
           <Link to={`/requests/${request.id}`} className="btn-ghost px-4 py-2 text-sm">
             View Details
           </Link>
+          <Link to={`/requests/${request.id}?openChat=1`} className="btn-ghost px-4 py-2 text-sm">
+            Chat
+          </Link>
           <Link to={`/map?focus=request:${request.id}`} className="btn-primary px-4 py-2 text-sm">
             View on Map
           </Link>

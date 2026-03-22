@@ -13,7 +13,7 @@ import { buildMapMarkers } from '@/utils/map';
 
 export function UserDashboardPage() {
   const data = useAppData();
-  const { donations, requests, events, organizations, profiles, aiInsights } = data;
+  const { donations, requests, events, organizations, profiles } = data;
   const { currentProfile } = useAuth();
 
   if (!currentProfile) {
@@ -23,7 +23,7 @@ export function UserDashboardPage() {
   const nearbyDonations = donations.slice(0, 2);
   const myRequests = requests.filter((request) => request.profileId === currentProfile.id).slice(0, 2);
   const upcomingEvents = events.slice(0, 2);
-  const mapMarkers = buildMapMarkers({ profiles, organizations, donations, requests, events, comments: [], aiInsights }, currentProfile).slice(0, 6);
+  const mapMarkers = buildMapMarkers(data).slice(0, 6);
 
   return (
     <div className="space-y-6">

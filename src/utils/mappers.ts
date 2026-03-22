@@ -1,7 +1,11 @@
 import type {
+  Conversation,
+  ConversationMember,
   Donation,
   Event,
+  EventParticipant,
   FoodRequest,
+  Message,
   Organization,
   Profile,
   RequestComment,
@@ -107,6 +111,48 @@ export function mapComment(row: any): RequestComment {
     requestId: row.request_id,
     profileId: row.profile_id,
     content: row.content,
+    createdAt: row.created_at,
+  };
+}
+
+export function mapConversation(row: any): Conversation {
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title ?? undefined,
+    eventId: row.event_id ?? null,
+    createdByProfileId: row.created_by_profile_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at ?? row.created_at,
+  };
+}
+
+export function mapConversationMember(row: any): ConversationMember {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    profileId: row.profile_id,
+    role: row.role,
+    joinedAt: row.joined_at ?? row.created_at,
+  };
+}
+
+export function mapMessage(row: any): Message {
+  return {
+    id: row.id,
+    conversationId: row.conversation_id,
+    profileId: row.profile_id,
+    content: row.content,
+    createdAt: row.created_at,
+  };
+}
+
+export function mapEventParticipant(row: any): EventParticipant {
+  return {
+    id: row.id,
+    eventId: row.event_id,
+    profileId: row.profile_id,
+    status: row.status ?? 'going',
     createdAt: row.created_at,
   };
 }

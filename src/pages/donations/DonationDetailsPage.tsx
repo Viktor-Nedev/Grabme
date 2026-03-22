@@ -1,5 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
-import { MapPinned, Navigation, PackageOpen } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { MapPinned, MessageCircle, Navigation, PackageOpen } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { SectionHeading } from '@/components/common/SectionHeading';
@@ -7,13 +8,17 @@ import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
 import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { buildNavigationUrl } from '@/utils/map';
+import { ROUTES } from '@/utils/constants';
 import { formatDateTime } from '@/utils/formatters';
 
 export function DonationDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const protectedNavigate = useProtectedNavigation();
-  const { donations, organizations, profiles } = useAppData();
+  const { donations, organizations, profiles, createOrGetDirectConversation } = useAppData();
   const { currentProfile } = useAuth();
+  const [working, setWorking] = useState(false);
   const donation = donations.find((entry) => entry.id === id);
   const organization = organizations.find((entry) => entry.id === donation?.organizationId);
   const donorProfile = profiles.find((entry) => entry.id === donation?.profileId);
@@ -25,6 +30,33 @@ export function DonationDetailsPage() {
   if (!donation) {
     return null;
   }
+
+  const targetProfileId = organization?.profileId ?? donation.profileId ?? null;
+
+  const handleStartChat = async () => {
+    if (!targetProfileId || targetProfileId === currentProfile?.id) {
+      return;
+    }
+
+    if (!currentProfile) {
+      protectedNavigate(`/donations/${donation.id}?openChat=1`);
+      return;
+    }
+
+    setWorking(true);
+    try {
+      const conversation = await createOrGetDirectConversation(currentProfile.id, targetProfileId);
+      navigate(`${ROUTES.chat}?conversation=${conversation.id}`);
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  useEffect(() => {
+    if (searchParams.get('openChat') === '1') {
+      void handleStartChat();
+    }
+  }, [searchParams]);
 
   return (
     <section className="section-shell py-10">
@@ -106,6 +138,12 @@ export function DonationDetailsPage() {
                 <PackageOpen className="size-4" />
                 Claim Pickup
               </button>
+              {!isOwner && targetProfileId ? (
+                <button type="button" onClick={handleStartChat} className="btn-ghost" disabled={working}>
+                  <MessageCircle className="size-4" />
+                  Chat
+                </button>
+              ) : null}
               {isOwner ? (
                 <Link to={`/donations/${donation.id}/edit`} className="btn-ghost">
                   Edit

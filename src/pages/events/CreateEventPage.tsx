@@ -13,6 +13,7 @@ export function CreateEventPage() {
   const { currentOrganization } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [useMapPick, setUseMapPick] = useState(true);
+  const [createGroupChat, setCreateGroupChat] = useState(true);
   const [coords, setCoords] = useState({
     lat: currentOrganization?.lat ?? EUROPE_COORDS.lat,
     lng: currentOrganization?.lng ?? EUROPE_COORDS.lng,
@@ -26,7 +27,9 @@ export function CreateEventPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setSubmitting(true);
-    const createdEvent = await addEvent(currentOrganization.id, {
+    const createdEvent = await addEvent(
+      { organizationId: currentOrganization.id, profileId: currentOrganization.profileId },
+      {
       title: String(form.get('title')),
       description: String(form.get('description')),
       eventDate: new Date(`${String(form.get('date'))}T${String(form.get('time'))}:00`).toISOString(),
@@ -36,8 +39,10 @@ export function CreateEventPage() {
       foodType: form.get('foodType') as (typeof FOOD_CATEGORIES)[number],
       capacity: Number(form.get('capacity')),
       notes: String(form.get('notes')),
+      createGroupChat,
       imageFile: form.get('image') instanceof File ? (form.get('image') as File) : null,
-    });
+    },
+    );
     setSubmitting(false);
     navigate(`/events/${createdEvent.id}`);
   };
@@ -96,6 +101,14 @@ export function CreateEventPage() {
           <FormField label="Capacity">
             <input name="capacity" type="number" min="1" defaultValue={80} className={inputClassName} required />
           </FormField>
+          <label className="flex items-center gap-3 rounded-[20px] border border-brand-ink/8 bg-brand-cream/40 px-4 py-4 text-sm md:col-span-2">
+            <input
+              type="checkbox"
+              checked={createGroupChat}
+              onChange={() => setCreateGroupChat((value) => !value)}
+            />
+            Create event group chat automatically
+          </label>
           <FormField label="Notes" className="md:col-span-2">
             <textarea name="notes" rows={4} className={inputClassName} placeholder="Accessibility notes, registration guidance, or volunteer needs." />
           </FormField>

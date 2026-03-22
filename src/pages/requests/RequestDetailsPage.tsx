@@ -1,22 +1,25 @@
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { MessageSquareMore, Navigation, PackagePlus, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { MessageCircle, MessageSquareMore, Navigation, PackagePlus, Trash2 } from 'lucide-react';
 import { MiniMapPreview } from '@/components/map/MiniMapPreview';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { inputClassName } from '@/components/forms/FormField';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
 import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
+import { ROUTES } from '@/utils/constants';
 import { buildNavigationUrl } from '@/utils/map';
 import { formatDateTime, urgencyTone } from '@/utils/formatters';
 
 export function RequestDetailsPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const protectedNavigate = useProtectedNavigation();
-  const { requests, profiles, comments, addComment, deleteRequest } = useAppData();
+  const { requests, profiles, comments, addComment, deleteRequest, createOrGetDirectConversation } = useAppData();
   const { currentProfile } = useAuth();
   const [comment, setComment] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [chatStarting, setChatStarting] = useState(false);
   const navigate = useNavigate();
   const request = requests.find((entry) => entry.id === id);
   const requester = profiles.find((entry) => entry.id === request?.profileId);
@@ -39,6 +42,31 @@ export function RequestDetailsPage() {
     });
     setComment('');
   };
+
+  const handleStartChat = async () => {
+    if (!requester || requester.id === currentProfile?.id) {
+      return;
+    }
+
+    if (!currentProfile) {
+      protectedNavigate(`/requests/${request.id}?openChat=1`);
+      return;
+    }
+
+    setChatStarting(true);
+    try {
+      const conversation = await createOrGetDirectConversation(currentProfile.id, requester.id);
+      navigate(`${ROUTES.chat}?conversation=${conversation.id}`);
+    } finally {
+      setChatStarting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (searchParams.get('openChat') === '1') {
+      void handleStartChat();
+    }
+  }, [searchParams]);
 
   return (
     <section className="section-shell py-10">
@@ -131,6 +159,12 @@ export function RequestDetailsPage() {
                 <PackagePlus className="size-4" />
                 Offer Food
               </button>
+              {!isOwner ? (
+                <button type="button" onClick={handleStartChat} className="btn-ghost" disabled={chatStarting}>
+                  <MessageCircle className="size-4" />
+                  Chat
+                </button>
+              ) : null}
               {isOwner ? (
                 <>
                   <Link to={`/requests/${request.id}/edit`} className="btn-ghost">

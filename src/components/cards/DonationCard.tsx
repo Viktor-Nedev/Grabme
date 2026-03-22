@@ -47,6 +47,9 @@ export function DonationCard({ donation, organizationName, donorName }: Donation
           <Link to={`/donations/${donation.id}`} className="btn-ghost px-4 py-2 text-sm">
             View Details
           </Link>
+          <Link to={`/donations/${donation.id}?openChat=1`} className="btn-ghost px-4 py-2 text-sm">
+            Chat
+          </Link>
           <Link to={`/map?focus=donation:${donation.id}`} className="btn-primary px-4 py-2 text-sm">
             View on Map
           </Link>

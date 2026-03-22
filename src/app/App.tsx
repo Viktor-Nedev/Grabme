@@ -18,6 +18,7 @@ import { HomePage } from '@/pages/HomePage';
 import { MapPage } from '@/pages/MapPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { ProfilePage } from '@/pages/ProfilePage';
+import { ChatPage } from '@/pages/ChatPage';
 import { RequestDetailsPage } from '@/pages/requests/RequestDetailsPage';
 import { EditRequestPage } from '@/pages/requests/EditRequestPage';
 import { RequestsFeedPage } from '@/pages/requests/RequestsFeedPage';
@@ -68,6 +69,7 @@ export function App() {
 
             <Route path="/requests/new" element={<CreateRequestPage />} />
             <Route path="/donations/new" element={<CreateDonationPage />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route element={<RoleProtectedRoute allowedRoles={['organization']} />}>
               <Route path="/events/new" element={<CreateEventPage />} />
             </Route>

@@ -1,10 +1,13 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Navigation, X } from 'lucide-react';
+import { ArrowUpRight, MessageCircle, Navigation, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { MapMarker } from '@/types';
 import { buildNavigationUrl } from '@/utils/map';
 
 export function MarkerPopup({ marker, onClose }: { marker: MapMarker; onClose?: () => void }) {
+  const canChat = marker.type === 'donation' || marker.type === 'request' || marker.type === 'event';
+  const chatRoute = `${marker.detailRoute}${marker.detailRoute.includes('?') ? '&' : '?'}openChat=1`;
+
   return (
     <motion.div
       className="surface-card absolute inset-x-4 bottom-4 z-20 border-white/80 p-4 shadow-[var(--shadow-soft)] md:inset-x-auto md:right-4 md:w-80"
@@ -43,6 +46,12 @@ export function MarkerPopup({ marker, onClose }: { marker: MapMarker; onClose?: 
           Navigate
         </a>
       </div>
+      {canChat ? (
+        <Link to={chatRoute} className="btn-ghost mt-2 w-full px-4 py-2 text-sm">
+          <MessageCircle className="size-4" />
+          Chat
+        </Link>
+      ) : null}
     </motion.div>
   );
 }

@@ -83,7 +83,7 @@ function eventMarker(event: Event, organization?: Organization): MapMarker {
   };
 }
 
-export function buildMapMarkers(data: AppDataset, currentProfile?: Profile | null): MapMarker[] {
+export function buildMapMarkers(data: AppDataset): MapMarker[] {
   const donationMarkers = data.donations
     .filter((donation) => donation.status === 'active')
     .map((donation) =>

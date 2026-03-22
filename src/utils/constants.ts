@@ -15,6 +15,7 @@ export const ROUTES = {
   donationNew: '/donations/new',
   requests: '/requests',
   requestNew: '/requests/new',
+  chat: '/chat',
   map: '/map',
   events: '/events',
   eventNew: '/events/new',

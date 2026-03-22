@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { LoginInput, Organization, Profile, RegisterInput, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { mapOrganization, mapProfile } from '@/utils/mappers';
-import { ROUTES } from '@/utils/constants';
+import { DEFAULT_COORDS, ROUTES } from '@/utils/constants';
 
 interface AuthContextValue {
   session: { userId: string } | null;
@@ -135,8 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       onboarding_complete: false,
       location_text: role === 'organization' ? 'Add your operating area' : 'Add your neighborhood',
-      lat: 41.8781,
-      lng: -87.6298,
+      lat: DEFAULT_COORDS.lat,
+      lng: DEFAULT_COORDS.lng,
     });
 
     if (profileError) {

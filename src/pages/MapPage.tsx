@@ -18,7 +18,7 @@ import type { MapMarker } from '@/types';
 
 export function MapPage() {
   const data = useAppData();
-  const { donations, requests, organizations, events, profiles, aiInsights } = data;
+  const { donations, requests, events, aiInsights } = data;
   const { currentProfile, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const focus = searchParams.get('focus');
@@ -40,7 +40,7 @@ export function MapPage() {
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [focusTarget, setFocusTarget] = useState<{ lat: number; lng: number; key: number } | null>(null);
 
-  const markers = buildMapMarkers({ profiles, organizations, donations, requests, events, comments: [], aiInsights }, currentProfile);
+  const markers = buildMapMarkers(data);
   const liveLocationMarker: MapMarker | null = userCoords
     ? {
         id: 'marker-live-location',
