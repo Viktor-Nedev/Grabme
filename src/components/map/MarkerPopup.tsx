@@ -1,11 +1,26 @@
-import { ArrowUpRight, Navigation } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, Navigation, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { MapMarker } from '@/types';
 import { buildNavigationUrl } from '@/utils/map';
 
-export function MarkerPopup({ marker }: { marker: MapMarker }) {
+export function MarkerPopup({ marker, onClose }: { marker: MapMarker; onClose?: () => void }) {
   return (
-    <div className="surface-card absolute inset-x-4 bottom-4 z-20 border-white/80 p-4 shadow-[var(--shadow-soft)] md:inset-x-auto md:right-4 md:w-80">
+    <motion.div
+      className="surface-card absolute inset-x-4 bottom-4 z-20 border-white/80 p-4 shadow-[var(--shadow-soft)] md:inset-x-auto md:right-4 md:w-80"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 12 }}
+      transition={{ duration: 0.25 }}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-3 top-3 rounded-full border border-brand-ink/10 bg-white/80 p-1.5 text-brand-gray transition hover:text-brand-ink"
+        aria-label="Close details"
+      >
+        <X className="size-4" />
+      </button>
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-red">{marker.meta}</p>
       <h3 className="mt-2 font-display text-xl">{marker.title}</h3>
       <p className="mt-2 text-sm text-brand-gray">{marker.description}</p>
@@ -28,6 +43,6 @@ export function MarkerPopup({ marker }: { marker: MapMarker }) {
           Navigate
         </a>
       </div>
-    </div>
+    </motion.div>
   );
 }

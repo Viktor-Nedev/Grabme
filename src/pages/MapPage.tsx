@@ -7,6 +7,8 @@ import { SearchBar } from '@/components/common/SearchBar';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { MapLegend } from '@/components/map/MapLegend';
 import { MapSurface } from '@/components/map/MapSurface';
+import { MapboxMap } from '@/components/map/MapboxMap';
+import { MarkerPopup } from '@/components/map/MarkerPopup';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
 import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
@@ -32,10 +34,33 @@ export function MapPage() {
   const [expiringOnly, setExpiringOnly] = useState(false);
   const [nearMeOnly, setNearMeOnly] = useState(false);
   const [category, setCategory] = useState('all');
+  const [mapStyle, setMapStyle] = useState<'custom' | 'satellite'>('custom');
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported'>(
+    'idle',
+  );
+  const [locationPromptDismissed, setLocationPromptDismissed] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const markers = buildMapMarkers({ profiles, organizations, donations, requests, events, comments: [], aiInsights }, currentProfile);
+  const liveLocationMarker: MapMarker | null = userCoords
+    ? {
+        id: 'marker-live-location',
+        entityId: 'live-location',
+        type: 'user-location',
+        title: 'Your live location',
+        description: 'Shared from your device for nearby matches.',
+        locationText: 'Live device location',
+        color: 'blue',
+        detailRoute: '/profile',
+        navigationLabel: 'Your location',
+        meta: 'Live location',
+        lat: userCoords.lat,
+        lng: userCoords.lng,
+      }
+    : null;
+  const markersWithLive = liveLocationMarker ? [...markers, liveLocationMarker] : markers;
 
-  const filteredMarkers = markers.filter((marker) => {
+  const filteredMarkers = markersWithLive.filter((marker) => {
     if (marker.type === 'donation' && !showDonations) return false;
     if (marker.type === 'request' && !showRequests) return false;
     if (marker.type === 'organization' && !showOrganizations) return false;
@@ -45,13 +70,12 @@ export function MapPage() {
       const donation = donations.find((item) => item.id === marker.entityId);
       return donation ? isExpiringSoon(donation.expiryDate, 48) : false;
     }
-    if (nearMeOnly && currentProfile) {
-      const distance = Number(
-        formatDistanceKm(currentProfile.lat, currentProfile.lng, marker.lat, marker.lng).replace(' km', ''),
-      );
+    const origin = userCoords ?? (currentProfile ? { lat: currentProfile.lat, lng: currentProfile.lng } : null);
+    if (nearMeOnly && origin) {
+      const distance = Number(formatDistanceKm(origin.lat, origin.lng, marker.lat, marker.lng).replace(' km', ''));
       if (distance > 4) return false;
     }
-    if (nearMeOnly && !currentProfile) return false;
+    if (nearMeOnly && !origin) return false;
     if (category !== 'all') {
       if (marker.type === 'donation') {
         return donations.find((item) => item.id === marker.entityId)?.category === category;
@@ -84,7 +108,30 @@ export function MapPage() {
     setSelectedId(filteredMarkers[0]?.id ?? null);
   }, [filteredMarkers, focus]);
 
-  const activeMarker = filteredMarkers.find((marker) => marker.id === selectedId) ?? filteredMarkers[0] ?? null;
+  const activeMarker = selectedId ? filteredMarkers.find((marker) => marker.id === selectedId) ?? null : null;
+  const hasMapbox = Boolean(import.meta.env.VITE_MAPBOX_TOKEN);
+  const styleUrl =
+    mapStyle === 'satellite'
+      ? 'mapbox://styles/mapbox/satellite-streets-v12'
+      : 'mapbox://styles/vikdev/cmlo8l453002c01qu7avs7rf3';
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unsupported');
+      return;
+    }
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setLocationStatus('granted');
+      },
+      () => {
+        setLocationStatus('denied');
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   return (
     <section className="section-shell py-10">
@@ -117,6 +164,38 @@ export function MapPage() {
           />
         </div>
       ) : null}
+      {!locationPromptDismissed ? (
+        <div className="mt-4">
+          <AlertBanner
+            title="Share your location?"
+            message="Enable live location to see yourself on the map and filter nearby items."
+            tone="info"
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={requestLocation}
+              className="btn-secondary px-4 py-2 text-sm"
+              disabled={locationStatus === 'requesting'}
+            >
+              {locationStatus === 'requesting' ? 'Requesting...' : 'Share location'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocationPromptDismissed(true)}
+              className="btn-ghost px-4 py-2 text-sm"
+            >
+              Not now
+            </button>
+          </div>
+          {locationStatus === 'denied' ? (
+            <p className="mt-2 text-xs text-red-600">Location access denied. You can enable it in your browser settings.</p>
+          ) : null}
+          {locationStatus === 'unsupported' ? (
+            <p className="mt-2 text-xs text-red-600">Geolocation is not supported by this browser.</p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[0.32fr_0.68fr]">
         <div className="space-y-4">
@@ -147,7 +226,12 @@ export function MapPage() {
                     Expiring soon
                   </label>
                   <label className="flex items-center gap-3 rounded-full border border-brand-ink/10 bg-white px-4 py-3 text-sm">
-                    <input type="checkbox" checked={nearMeOnly} onChange={() => setNearMeOnly((value) => !value)} disabled={!currentProfile} />
+                    <input
+                      type="checkbox"
+                      checked={nearMeOnly}
+                      onChange={() => setNearMeOnly((value) => !value)}
+                      disabled={!currentProfile && !userCoords}
+                    />
                     Near me
                   </label>
                 </div>
@@ -159,6 +243,14 @@ export function MapPage() {
                     </option>
                   ))}
                 </select>
+                <label className="flex items-center gap-3 rounded-full border border-brand-ink/10 bg-white px-4 py-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={mapStyle === 'satellite'}
+                    onChange={() => setMapStyle((value) => (value === 'satellite' ? 'custom' : 'satellite'))}
+                  />
+                  Satellite mode
+                </label>
               </div>
             </div>
           </FilterBar>
@@ -207,7 +299,25 @@ export function MapPage() {
         </div>
 
         <div className="space-y-4">
-          <MapSurface markers={filteredMarkers} selectedId={selectedId} onSelect={(marker: MapMarker) => setSelectedId(marker.id)} className="h-[720px]" />
+          {hasMapbox ? (
+            <div className="relative">
+              <MapboxMap
+                markers={filteredMarkers}
+                selectedId={selectedId}
+                onSelect={(marker: MapMarker) => setSelectedId(marker.id)}
+                className="h-[720px]"
+                styleUrl={styleUrl}
+              />
+              {activeMarker ? <MarkerPopup marker={activeMarker} onClose={() => setSelectedId(null)} /> : null}
+            </div>
+          ) : (
+            <MapSurface
+              markers={filteredMarkers}
+              selectedId={selectedId}
+              onSelect={(marker: MapMarker) => setSelectedId(marker.id)}
+              className="h-[720px]"
+            />
+          )}
           <div className="surface-card p-5">
             <div className="flex items-center gap-2">
               <MapPinned className="size-4 text-brand-red" />

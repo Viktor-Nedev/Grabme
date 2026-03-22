@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { SectionHeading } from '@/components/common/SectionHeading';
 import { RoleBadge } from '@/components/common/RoleBadge';
 import { useAppData } from '@/hooks/useAppData';
 import { useAuth } from '@/hooks/useAuth';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export function ProfilePage() {
   const { requests } = useAppData();
   const { currentProfile, currentOrganization, logout } = useAuth();
+  const [supabaseStatus, setSupabaseStatus] = useState<'idle' | 'checking' | 'ok' | 'error'>('idle');
+  const [supabaseMessage, setSupabaseMessage] = useState('');
 
   if (!currentProfile) {
     return null;
@@ -54,6 +58,56 @@ export function ProfilePage() {
               <p className="mt-2 font-semibold">{myRequests.length} requests posted</p>
             </div>
           )}
+        </div>
+        <div className="mt-8 surface-muted p-5">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-gray">Supabase Status</p>
+          <p className="mt-3 text-sm text-brand-gray">
+            {isSupabaseConfigured
+              ? 'Environment variables detected. Run a live check to confirm connectivity.'
+              : 'Supabase env vars are missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                supabaseStatus === 'ok'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : supabaseStatus === 'error'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-brand-cream text-brand-gray'
+              }`}
+            >
+              {supabaseStatus === 'idle' && 'Not checked'}
+              {supabaseStatus === 'checking' && 'Checking...'}
+              {supabaseStatus === 'ok' && 'Connected'}
+              {supabaseStatus === 'error' && 'Connection error'}
+            </span>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={!isSupabaseConfigured || supabaseStatus === 'checking'}
+              onClick={async () => {
+                if (!supabase) return;
+                setSupabaseStatus('checking');
+                setSupabaseMessage('');
+                try {
+                  const { error } = await supabase.auth.getSession();
+                  if (error) {
+                    setSupabaseStatus('error');
+                    setSupabaseMessage(error.message);
+                  } else {
+                    setSupabaseStatus('ok');
+                    setSupabaseMessage('Supabase auth session endpoint responded.');
+                  }
+                } catch (err) {
+                  setSupabaseStatus('error');
+                  setSupabaseMessage(err instanceof Error ? err.message : 'Unknown error');
+                }
+              }}
+            >
+              Run connection check
+            </button>
+          </div>
+          {supabaseMessage ? <p className="mt-3 text-xs text-brand-gray">{supabaseMessage}</p> : null}
         </div>
         <div className="mt-8 flex">
           <button type="button" onClick={logout} className="btn-primary">

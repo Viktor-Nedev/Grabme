@@ -2,6 +2,7 @@ import '@fontsource/manrope/500.css';
 import '@fontsource/manrope/700.css';
 import '@fontsource/sora/600.css';
 import '@fontsource/sora/700.css';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from '@/app/App';
