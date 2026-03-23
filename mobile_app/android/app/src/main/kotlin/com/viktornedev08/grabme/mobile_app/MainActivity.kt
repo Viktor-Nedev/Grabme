@@ -1,0 +1,5 @@
+package com.viktornedev08.grabme.mobile_app
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

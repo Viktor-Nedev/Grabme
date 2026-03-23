@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, Settings, UserRound, X } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/utils/constants';
 import { cn } from '@/utils/cn';
@@ -15,6 +15,8 @@ const publicLinks = [
 export function Navbar() {
   const { currentProfile, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const hideNav = location.pathname === ROUTES.home || location.pathname === ROUTES.auth;
 
   const dashboardRoute =
     currentProfile?.role === 'organization' ? ROUTES.orgDashboard : ROUTES.userDashboard;
@@ -32,48 +34,50 @@ export function Navbar() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {isAuthenticated ? (
-            <NavLink
-              to={dashboardRoute}
-              className={({ isActive }) =>
-                cn(
-                  'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
-                  isActive && 'text-brand-ink'
-                )
-              }
-            >
-              Dashboard
-            </NavLink>
-          ) : null}
-          {publicLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                cn(
-                  'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
-                  isActive && 'text-brand-ink'
-                )
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-          {isAuthenticated ? (
-            <NavLink
-              to={ROUTES.chat}
-              className={({ isActive }) =>
-                cn(
-                  'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
-                  isActive && 'text-brand-ink'
-                )
-              }
-            >
-              Chat
-            </NavLink>
-          ) : null}
-        </nav>
+        {!hideNav && (
+          <nav className="hidden items-center gap-6 md:flex">
+            {isAuthenticated ? (
+              <NavLink
+                to={dashboardRoute}
+                className={({ isActive }) =>
+                  cn(
+                    'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
+                    isActive && 'text-brand-ink'
+                  )
+                }
+              >
+                Dashboard
+              </NavLink>
+            ) : null}
+            {publicLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  cn(
+                    'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
+                    isActive && 'text-brand-ink'
+                  )
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+            {isAuthenticated ? (
+              <NavLink
+                to={ROUTES.chat}
+                className={({ isActive }) =>
+                  cn(
+                    'text-sm font-medium text-brand-gray transition hover:text-brand-red hover:drop-shadow-[0_0_10px_rgba(229,57,53,0.45)]',
+                    isActive && 'text-brand-ink'
+                  )
+                }
+              >
+                Chat
+              </NavLink>
+            ) : null}
+          </nav>
+        )}
 
         <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated && currentProfile ? (
@@ -102,7 +106,7 @@ export function Navbar() {
         </button>
       </div>
 
-      {mobileOpen ? (
+      {mobileOpen && !hideNav ? (
         <div className="section-shell border-t border-brand-ink/8 py-4 md:hidden">
           <div className="flex flex-col gap-4">
             {publicLinks.map((link) => (

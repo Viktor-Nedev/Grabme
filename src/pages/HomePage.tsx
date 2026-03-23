@@ -8,12 +8,10 @@ import { SectionHeading } from '@/components/common/SectionHeading';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatsCard } from '@/components/common/StatsCard';
 import { useAppData } from '@/hooks/useAppData';
-import { useProtectedNavigation } from '@/hooks/useProtectedNavigation';
 import { QUICK_STATS, ROUTES } from '@/utils/constants';
 
 export function HomePage() {
   const { donations, requests, events, organizations } = useAppData();
-  const protectedNavigate = useProtectedNavigation();
   const reveal = {
     hidden: { opacity: 0, y: 16 },
     show: { opacity: 1, y: 0 },
@@ -36,24 +34,6 @@ export function HomePage() {
             Grabme connects NGOs, food banks, stores, and donors with people who need food right now. Live donations,
             urgent requests, and community pickup events stay visible on one public map.
           </p>
-          <motion.div className="mt-8 flex flex-wrap gap-3" variants={reveal} transition={{ delay: 0.1 }}>
-            <Link to={ROUTES.map} className="btn-primary">
-              <MapPinned className="size-4" />
-              Find Food Near You
-            </Link>
-            <Link to={ROUTES.map} className="btn-secondary">
-              View Map
-            </Link>
-            <button type="button" onClick={() => protectedNavigate(ROUTES.requestNew)} className="btn-ghost">
-              Make a Request
-            </button>
-            <button type="button" onClick={() => protectedNavigate(ROUTES.donationNew)} className="btn-ghost">
-              Donate Food
-            </button>
-            <Link to={ROUTES.events} className="btn-ghost">
-              Explore Events
-            </Link>
-          </motion.div>
           <motion.div className="mt-10 grid gap-4 sm:grid-cols-3" variants={reveal} transition={{ delay: 0.2 }}>
             {QUICK_STATS.map((stat) => (
               <div key={stat.label} className="surface-muted p-4">
